@@ -5,40 +5,56 @@ LAYOUT_WITH_LEGEND()
 
 Person(pilot, "Пилот протеза", "Пользователь бионического протеза")
 Person(purchaser, "Покупатель протеза", "Клиент интернет-магазина")
+Person(operator, "Оператор производства", "Управление заказами в CRM")
 
 System_Boundary(bionicpro, "BionicPRO System") {
     Container(mobile_app, "Приложение для донастройки протеза", "iOS/Android", "Управление протезом, сбор миосигналов")
     Container(frontend, "Интернет-магазин", "React/TypeScript", "Заказ протезов, личный кабинет")
-    Container(auth_service, "bionicpro-auth", "Python/Go/Java", "Сервис аутентификации: управление сессиями, токенами, интеграция с IdP")
-    ContainerDb(session_cache, "Session Store", "Redis", "Хранение access_token, refresh_token, session_id (шифрование at-rest)")
+    
+    Container(auth_service, "bionicpro-auth", "Python/Go/Java", "Сервис аутентификации: сессии, токены, интеграция с IdP")
+    ContainerDb(session_cache, "Session Store", "Redis", "Хранение access_token, refresh_token, session_id (шифрование)")
     Container(keycloak, "Keycloak", "IAM", "Основной IdP, Identity Brokering, MFA, RBAC")
+    
     ContainerDb(crm_db, "CRM DB", "PostgreSQL", "Персональные данные пользователей (локально)")
     ContainerDb(olap_db, "OLAP DB", "ClickHouse", "Аналитика телеметрии протезов")
     Container(crm, "CRM", "Битрикс24", "Управление заказами и клиентами")
-    System_Ext(external_idp, "Внешние IdP", "Yandex ID / LDAP / Other", "Федеративная аутентификация в разных странах")
+    Container(api, "API", "Backend", "Публичный API для мобильного приложения и отчётов")
+    
+    System_Ext(external_idp, "Внешние IdP", "Yandex ID / LDAP / Other", "Федеративная аутентификация")
 }
 
+' Пользовательские потоки
 Rel(pilot, mobile_app, "Использует", "HTTPS")
 Rel(purchaser, frontend, "Заказывает протез", "HTTPS")
+Rel(operator, crm, "Управляет заказами", "HTTPS")
 
+' Аутентификация
 Rel(mobile_app, auth_service, "1. Логин/пароль или внеш. провайдер", "HTTPS + PKCE")
 Rel(frontend, auth_service, "1. Логин/пароль или внеш. провайдер", "HTTPS + PKCE")
 Rel(auth_service, keycloak, "2. OAuth2.0 Code Flow + PKCE", "Internal HTTPS")
 Rel(keycloak, external_idp, "3. Identity Brokering", "OAuth2.0/OIDC")
 Rel(keycloak, auth_service, "4. access_token + refresh_token", "Internal HTTPS")
+
+' Сессии
 Rel(auth_service, session_cache, "5. Сохраняет tokens, session_id", "TLS")
-Rel(auth_service, mobile_app, "6. Set-Cookie: session_id (HTTP-only, Secure, SameSite)", "HTTPS")
-Rel(auth_service, frontend, "6. Set-Cookie: session_id (HTTP-only, Secure, SameSite)", "HTTPS")
+Rel(auth_service, mobile_app, "6. Set-Cookie: session_id (HTTP-only, Secure)", "HTTPS")
+Rel(auth_service, frontend, "6. Set-Cookie: session_id (HTTP-only, Secure)", "HTTPS")
 Rel(mobile_app, auth_service, "7. Запросы с session cookie", "HTTPS")
 Rel(frontend, auth_service, "7. Запросы с session cookie", "HTTPS")
 Rel(auth_service, session_cache, "8. Валидация сессии / ротация session_id", "TLS")
-Rel(auth_service, keycloak, "9. Refresh access_token при истечении", "Internal HTTPS")
-Rel(auth_service, crm_db, "10. Проверка прав доступа к данным", "Internal")
-Rel(auth_service, crm, "11. Запрос данных профиля", "Internal")
-Rel(crm, crm_db, "Хранит персональные данные", "Локально в стране представительства")
-Rel(mobile_app, olap_db, "Телеметрия протеза (анонимизированная)", "4G/HTTPS")
+Rel(auth_service, keycloak, "9. Refresh access_token", "Internal HTTPS")
+
+' Бизнес-логика
+Rel(crm, crm_db, "Хранит персональные данные", "Локально")
+Rel(frontend, crm, "Создание заказа, профиль пользователя", "Internal API")
+Rel(api, crm_db, "Чтение данных профиля для отчётов", "Internal")
+Rel(mobile_app, api, "Получение телеметрии, отчёты", "HTTPS")
+Rel(mobile_app, olap_db, "Отправка телеметрии (анонимизированной)", "4G/HTTPS")
+
+' Права доступа
 Rel(keycloak, auth_service, "MFA (OTP) + RBAC роли", "Валидация политик")
 
+' Примечания
 note right of auth_service
   Токены от IdP НЕ передаются на фронтенд
   Реализуется ротация session_id
@@ -46,15 +62,15 @@ end note
 
 note bottom of session_cache
   Хранение:
-  • access_token (TTL ≤ 2 мин)
-  • refresh_token (шифрование at-rest)
-  • Привязка к session_id + user_id
+  - access_token (TTL <= 2 мин)
+  - refresh_token (шифрование at-rest)
+  - Привязка к session_id + user_id
 end note
 
 note right of external_idp
   Поддержка федеративных провайдеров:
-  • Yandex ID (OAuth 2.0)
-  • LDAP (представительства)
+  - Yandex ID (OAuth 2.0)
+  - LDAP (представительства)
 end note
 
 @enduml
