@@ -21,7 +21,7 @@ public class SessionValidationMiddleware
 
         var path = context.Request.Path.Value;
 
-        if (path?.StartsWith("/auth") == true || path?.StartsWith("/health") == true)
+        if (IsPublicPath(path))
         {
             await _next(context);
             return;
@@ -61,5 +61,14 @@ public class SessionValidationMiddleware
         context.Items["AccessToken"] = session.AccessToken;
 
         await _next(context);
+    }
+
+    private static bool IsPublicPath(string? path)
+    {
+        return path?.StartsWith("/auth") == true ||
+               path?.StartsWith("/health") == true ||
+               path?.StartsWith("/swagger") == true ||    // ← Swagger UI
+               path?.StartsWith("/openapi") == true ||    // ← OpenAPI spec
+               path?.Equals("/") == true;
     }
 }

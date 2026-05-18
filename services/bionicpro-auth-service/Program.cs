@@ -33,15 +33,30 @@ builder.Services.AddScoped<IAuthSessionService, AuthSessionService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi();
+
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "bionicpro-auth", Version = "v1" });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+//if (app.Environment.IsDevelopment())
+//{
+
+    app.UseSwagger();  // Генерирует /swagger/v1/swagger.json
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "bionicpro-auth v1");
+        c.RoutePrefix = "swagger";  // UI доступен по /swagger
+    });
+
+//   app.MapOpenApi();
+//}
 
 app.UseHttpsRedirection();
 
