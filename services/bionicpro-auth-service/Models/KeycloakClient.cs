@@ -1,8 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using BionicproAuthService.Models;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using BionicproAuthService.Models;
-using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
 namespace BionicproAuthService.Models;
 
@@ -21,13 +22,13 @@ public record KeycloakOptions
 // Модели
 // ─────────────────────────────────────────────────────────────
 public record TokenResponse(
-    string AccessToken,
-    string RefreshToken,
-    string? IdToken,
-    int ExpiresIn,
-    int RefreshExpiresIn,
-    string TokenType = "Bearer",
-    string? Scope = null);
+    [property: JsonPropertyName("access_token")] string AccessToken,
+    [property: JsonPropertyName("refresh_token")] string RefreshToken,
+    [property: JsonPropertyName("id_token")] string? IdToken,
+    [property: JsonPropertyName("expires_in")] int ExpiresIn,
+    [property: JsonPropertyName("refresh_expires_in")] int RefreshExpiresIn,
+    [property: JsonPropertyName("token_type")] string TokenType = "Bearer",
+    [property: JsonPropertyName("scope")] string? Scope = null);
 
 public record UserInfo(
     string Sub,
@@ -72,13 +73,26 @@ public class KeycloakClient : IKeycloakClient
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
             new KeyValuePair<string, string>("username", username),
-            new KeyValuePair<string, string>("password", password)
+            new KeyValuePair<string, string>("password", password),
+            new KeyValuePair<string, string>("scope", "openid profile email")
         });
 
         var response = await _httpClient.PostAsync(endpoint, content);
-        if (!response.IsSuccessStatusCode) return null;
+        var rawContent = await response.Content.ReadAsStringAsync();
 
-        return await response.Content.ReadFromJsonAsync<TokenResponse>();
+        Console.WriteLine($"[Keycloak] Raw response: {rawContent}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"[Keycloak] Error: {response.StatusCode}");
+            return null;
+        }
+
+        var tokens = await response.Content.ReadFromJsonAsync<TokenResponse>();
+
+        Console.WriteLine($"[Keycloak] Parsed AccessToken: {(tokens?.AccessToken?.Substring(0, 20) ?? "null")}...");
+
+        return tokens;
     }
 
     public async Task<TokenResponse?> RefreshTokenAsync(string refreshToken)

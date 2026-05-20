@@ -2,6 +2,7 @@ using BionicproAuthService.Middleware;
 using BionicproAuthService.Models;
 using BionicproAuthService.Services;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,11 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
 
+//builder.Services.Configure<JsonSerializerOptions>(options =>
+//{
+//    options.PropertyNameCaseInsensitive = true;
+//    options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+//});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
