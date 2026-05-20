@@ -19,40 +19,41 @@
   ],
   "clients": [
     {
-      "clientId": "reports-frontend",
-      "enabled": true,
-      "publicClient": true,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
-      
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      
-      "attributes": {
-        "post.logout.redirect.uris": "http://localhost:3000/*"
-      }
-    },
-    {
-      "clientId": "reports-frontend_old",
-      "enabled": true,  
-      "publicClient": true,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "attributes": {
-        "pkce.code.challenge.method": "S256"
-      }
-    },
-    {
       "clientId": "reports-api",
       "enabled": true,
+      "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq",
-      "bearerOnly": true
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      
+      "protocol": "openid-connect",
+      
+      "defaultClientScopes": ["openid", "profile", "email"],
+      "optionalClientScopes": [],
+      
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      
+      "protocolMappers": [
+        {
+          "name": "sub-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "sub",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     }
   ]
 }
