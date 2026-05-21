@@ -1,4 +1,5 @@
 ﻿using BionicproAuthService.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
@@ -20,6 +21,7 @@ public record AuthSessionData(
     string SessionId,
     string AccessToken,
     string RefreshToken,
+    DateTime CreatedAt,
     DateTime ExpiresAt,
     string UserId);
 
@@ -54,16 +56,39 @@ public class AuthSessionService : IAuthSessionService
 
     public async Task<AuthSessionData?> CreateSessionAsync(TokenResponse tokens, string userId)
     {
-        var sessionId = GenerateSecureId();
-        var session = new AuthSessionData(
-            SessionId: sessionId,
-            AccessToken: tokens.AccessToken,
-            RefreshToken: Encrypt(tokens.RefreshToken),
-            ExpiresAt: DateTime.UtcNow.Add(_sessionTtl),
-            UserId: userId);
+        try
+        {
+            Console.WriteLine($"[Session] Creating session for userId: {userId}");
 
-        await SaveSessionAsync(session);
-        return session;
+            var sessionId = GenerateSecureId();
+            Console.WriteLine($"[Session] Generated sessionId: {sessionId}");
+
+            var session = new AuthSessionData(
+                SessionId: sessionId,
+                UserId: userId,
+                AccessToken: Encrypt(tokens.AccessToken),      // ← Проверьте Encrypt()
+                RefreshToken: Encrypt(tokens.RefreshToken),    // ← Проверьте Encrypt()
+                CreatedAt: DateTime.UtcNow,
+                ExpiresAt: DateTime.UtcNow.AddMinutes(_options.SessionLifetimeMinutes)
+            );
+
+            Console.WriteLine($"[Session] Serialized session, AccessToken length: {tokens.AccessToken?.Length}");
+
+            await SaveSessionAsync(session);
+
+            // 🔍 Проверка: действительно ли сохранилось?
+            var key = $"session:{sessionId}";
+            var verify = await _cache.GetAsync(key);
+            Console.WriteLine($"[Session] Verify save for key '{key}': {(verify != null ? "OK" : "FAILED")}");
+
+            return session;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Session] ERROR in CreateSessionAsync: {ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine($"[Session] Stack: {ex.StackTrace}");
+            throw; // ← Не глотать исключение!
+        }
     }
 
     public async Task<AuthSessionData?> GetSessionAsync(string sessionId)
@@ -124,11 +149,28 @@ public class AuthSessionService : IAuthSessionService
 
     private async Task SaveSessionAsync(AuthSessionData session)
     {
-        var data = JsonSerializer.SerializeToUtf8Bytes(session);
-        await _cache.SetAsync($"session:{session.SessionId}", data, new DistributedCacheEntryOptions
+        try
         {
-            AbsoluteExpirationRelativeToNow = _sessionTtl
-        });
+            var key = $"session:{session.SessionId}";
+            Console.WriteLine($"[Redis] Saving to key: {key}");
+
+            var data = JsonSerializer.SerializeToUtf8Bytes(session);
+            Console.WriteLine($"[Redis] Serialized data length: {data.Length}");
+
+            await _cache.SetAsync(key, data, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.SessionLifetimeMinutes)
+            });
+
+            Console.WriteLine($"[Redis] SetAsync completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Redis] ERROR: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+                Console.WriteLine($"[Redis] Inner: {ex.InnerException.Message}");
+            throw;
+        }
     }
 
     private string GenerateSecureId()
@@ -138,10 +180,21 @@ public class AuthSessionService : IAuthSessionService
         return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
     }
 
-    private string Encrypt(string value)
+    private string Encrypt(string plainText)
     {
-        // В продакшене использовать AES с ключом из конфигурации
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+        if (string.IsNullOrEmpty(plainText)) return plainText;
+
+        try
+        {
+            // Ваша логика шифрования
+
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(plainText));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Encrypt] Error: {ex.Message}");
+            throw;
+        }
     }
 
     private string Decrypt(string encrypted)

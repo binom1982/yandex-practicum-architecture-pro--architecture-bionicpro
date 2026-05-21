@@ -14,33 +14,52 @@ public class SessionValidationMiddleware
         _cookieName = config["Session:CookieName"] ?? "bionicpro_session";
     }
 
+    // SessionValidationMiddleware.cs
     public async Task InvokeAsync(HttpContext context)
     {
-        // ✅ Разрешаем сервис из скоупа текущего запроса
         var sessionService = context.RequestServices.GetRequiredService<IAuthSessionService>();
-
         var path = context.Request.Path.Value;
 
-        if (IsPublicPath(path))
+        // 🔍 Публичные пути (только те, что НЕ требуют сессии)
+        if (path == "/auth/login" ||                    // ← POST логин
+            path == "/auth/logout" ||                   // ← POST логаут (опционально)
+            path?.StartsWith("/health") == true ||
+            path?.StartsWith("/swagger") == true ||
+            path?.StartsWith("/openapi") == true)
         {
             await _next(context);
             return;
         }
 
+        // 🔍 Логирование входящих куки
+        var allCookies = string.Join("; ", context.Request.Cookies.Select(c => $"{c.Key}={c.Value}"));
+        Console.WriteLine($"[Middleware] Path: {path}, Cookies: [{allCookies}]");
+
         if (!context.Request.Cookies.TryGetValue(_cookieName, out var sessionId) ||
             string.IsNullOrEmpty(sessionId))
         {
+            Console.WriteLine($"[Middleware] ❌ Cookie '{_cookieName}' NOT found. Available: [{string.Join(", ", context.Request.Cookies.Keys)}]");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
+
+        Console.WriteLine($"[Middleware] ✅ Found session ID: {sessionId?.Substring(0, 20)}...");
 
         var session = await sessionService.GetSessionAsync(sessionId);
         if (session == null)
         {
+            Console.WriteLine($"[Middleware] ❌ Session NOT found in cache for key: session:{sessionId}");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
 
+        Console.WriteLine($"[Middleware] ✅ Session validated for userId: {session.UserId}");
+
+        // Устанавливаем данные в контекст для контроллеров
+        context.Items["UserId"] = session.UserId;
+        context.Items["AccessToken"] = session.AccessToken;
+
+        // 🔁 Ротация сессии (опционально, для защиты от fixation)
         var rotated = await sessionService.RotateSessionAsync(sessionId);
         if (rotated)
         {
@@ -50,25 +69,13 @@ public class SessionValidationMiddleware
                 context.Response.Cookies.Append(_cookieName, newSession.SessionId, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,//app.Environment.IsProduction(), // ← отключить Secure для dev
                     SameSite = SameSiteMode.Strict,
                     Expires = newSession.ExpiresAt
                 });
             }
         }
 
-        context.Items["UserId"] = session.UserId;
-        context.Items["AccessToken"] = session.AccessToken;
-
         await _next(context);
-    }
-
-    private static bool IsPublicPath(string? path)
-    {
-        return path?.StartsWith("/auth") == true ||
-               path?.StartsWith("/health") == true ||
-               path?.StartsWith("/swagger") == true ||    // ← Swagger UI
-               path?.StartsWith("/openapi") == true ||    // ← OpenAPI spec
-               path?.Equals("/") == true;
     }
 }

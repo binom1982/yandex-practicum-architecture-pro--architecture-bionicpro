@@ -17,6 +17,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration["Redis:ConnectionString"];
     options.InstanceName = "bionicpro:";
+
+    Console.WriteLine($"[Redis] Config: ConnectionString={options.Configuration}, InstanceName={options.InstanceName}");
 });
 
 // HTTP Client for Keycloak

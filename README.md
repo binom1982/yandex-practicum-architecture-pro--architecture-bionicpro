@@ -28,3 +28,26 @@ http://localhost:3000
 
 1. Нажмите «Войти» → редирект на Keycloak → логин → возврат с  `?code=...`
 2. В консоли браузера: `sessionStorage.getItem('access_token')` должен вернуть JWT
+
+Отладка
+
+```bash
+# Пересоберите и перезапустите
+docker compose up -d --build bionicpro-auth
+
+# Протестируйте полный поток
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user1","password":"password123"}' \
+  -c cookies.txt
+
+# Проверьте ключи в Redis
+docker compose exec redis redis-cli KEYS "*"
+
+# Запросите /me с ручной кукой
+SESSION_ID=$(grep bionicpro_session cookies.txt | awk '{print $7}')
+curl -H "Cookie: bionicpro_session=$SESSION_ID" http://localhost:8000/auth/me
+
+
+docker compose logs -f bionicpro-auth
+```
