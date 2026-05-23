@@ -2,6 +2,92 @@
   "id": "reports-realm",
   "realm": "reports-realm",
   "enabled": true,
+  "components": {
+    "org.keycloak.storage.UserStorageProvider": [
+      {
+        "id": "ldap-bionicpro-external",
+        "name": "bionicpro-external-ldap",
+        "providerId": "ldap",
+        "subComponents": {
+          "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
+            {
+              "id": "username-mapper",
+              "name": "username",
+              "providerId": "user-attribute-ldap-mapper",
+              "config": {
+                "ldap.attribute": ["uid"],
+                "user.model.attribute": ["username"]
+              }
+            },
+            {
+              "id": "email-mapper",
+              "name": "email",
+              "providerId": "user-attribute-ldap-mapper",
+              "config": {
+                "ldap.attribute": ["mail"],
+                "user.model.attribute": ["email"]
+              }
+            },
+            {
+              "id": "fullname-mapper",
+              "name": "fullname",
+              "providerId": "user-attribute-ldap-mapper",
+              "config": {
+                "ldap.attribute": ["cn"],
+                "user.model.attribute": ["firstName"]
+              }
+            },
+            {
+              "id": "group-role-mapper",
+              "name": "ldap-group-to-realm-role",
+              "providerId": "group-ldap-mapper",
+              "config": {
+                "mode": ["READ_ONLY"],
+                "user.roles.retrieve.strategy": ["LOAD_GROUPS_BY_MEMBER_ATTRIBUTE"],
+                "groups.dn": ["ou=Groups,dc=example,dc=com"],
+                "group.name.ldap.attribute": ["cn"],
+                "group.object.classes": ["groupOfNames"],
+                "preserve.group.inheritance": ["false"],
+                "ignore.missing.groups": ["false"],
+                "membership.attribute.type": ["DN"],
+                "membership.user.ldap.attribute": ["uid"],
+                "membership.ldap.attribute": ["member"],
+                "mapped.group.attributes": ["cn"],
+                "memberof.ldap.attribute": ["memberOf"]
+              }
+            }
+          ]
+        },
+        "config": {
+          "editMode": ["READ_ONLY"],
+          "priority": ["0"],
+          "enabled": ["true"],
+          "connectionUrl": ["ldap://openldap:389"],
+          "bindDn": ["cn=admin,dc=example,dc=com"],
+          "bindCredential": ["adminpassword"],
+          "baseDn": ["dc=example,dc=com"],
+          "userObjectClasses": ["inetOrgPerson"],
+          "usernameLDAPAttribute": ["uid"],
+          "rdnLDAPAttribute": ["uid"],
+          "uuidLDAPAttribute": ["entryUUID"],
+          "userLDAPFilter": ["(objectClass=inetOrgPerson)"],
+          "searchScope": ["2"],
+          "validatePasswordPolicy": ["false"],
+          "trustEmail": ["true"],
+          "syncRegistrations": ["false"],
+          "vendor": ["other"],
+          "usePasswordModifyExtendedOp": ["false"],
+          "authType": ["simple"],
+          "startTls": ["false"],
+          "connectionPooling": ["true"],
+          "pagination": ["true"],
+          "batchSizeForSync": ["1000"],
+          "fullSyncPeriod": ["-1"],
+          "changedSyncPeriod": ["-1"]
+        }
+      }
+    ]
+  },
   "roles": {
     "realm": [
       { "name": "user", "description": "Regular user role" },
@@ -29,16 +115,12 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
-      
       "protocol": "openid-connect",
-      
       "defaultClientScopes": ["openid", "profile", "email"],
       "optionalClientScopes": [],
-      
       "attributes": {
         "post.logout.redirect.uris": "+"
       },
-      
       "protocolMappers": [
         {
           "name": "sub-mapper",

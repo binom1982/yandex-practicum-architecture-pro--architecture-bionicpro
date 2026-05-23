@@ -51,3 +51,11 @@ curl -H "Cookie: bionicpro_session=$SESSION_ID" http://localhost:8000/auth/me
 
 docker compose logs -f bionicpro-auth
 ```
+
+LDAP
+
+```
+Доступы
+Keycloak Admin Console: http://localhost:8080/admin (admin/admin)
+phpLDAPadmin: http://localhost:6443 (cn=admin,dc=example,dc=com / adminpassword)
+```

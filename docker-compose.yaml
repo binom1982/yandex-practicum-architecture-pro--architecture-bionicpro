@@ -118,3 +118,46 @@ services:
     depends_on:
       bionicpro-auth:
         condition: service_healthy
+
+  # ─────────────────────────────────────────────────────
+  # LDAP (обновлено)
+  # ─────────────────────────────────────────────────────
+  openldap:
+    image: osixia/openldap:1.5.0  # стабильная версия с Docker Hub [[22]]
+    container_name: bionicpro-ldap
+    ports:
+      - "1389:389"   # исправлен порт: внутренний 389, не 1389
+      - "1636:636"
+    environment:
+      - LDAP_ORGANISATION=BionicPRO
+      - LDAP_DOMAIN=example.com
+      - LDAP_ADMIN_PASSWORD=adminpassword
+      - LDAP_CONFIG_PASSWORD=configpassword
+      - LDAP_TLS=false
+    volumes:
+      - ./ldap/config.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config.ldif:ro
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    command: ["--copy-service"]  # важно для применения LDIF при старте
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-b", "dc=example,dc=com", "-D", "cn=admin,dc=example,dc=com", "-w", "adminpassword", "objectClass=*"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0  # совместимая версия [[11]]
+    container_name: bionicpro-ldap-admin
+    ports:
+      - "6443:80"  # HTTP, т.к. PHPLDAPADMIN_HTTPS=false
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+      - PHPLDAPADMIN_HTTPS=false
+    depends_on:
+      openldap:
+        condition: service_healthy
+
+volumes:
+  ldap_data:
+  ldap_config:
