@@ -57,7 +57,28 @@ public class AuthController : ControllerBase
                 Expires = session.ExpiresAt
             });
 
-        return Ok(new { success = true });
+        // После создания сессии, перед возвратом:
+        var roles = ParseRolesFromToken(tokens.AccessToken); // ← добавить
+
+        return Ok(new
+        {
+            success = true,
+            roles = roles  // ← добавить
+        });
+
+        
+    }
+
+    private List<string> ParseRolesFromToken(string accessToken)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(accessToken);
+
+        // Keycloak кладёт роли в claim "realm_access.roles"
+        var rolesClaim = jwt.Claims.FirstOrDefault(c => c.Type == "realm_access.roles");
+        if (rolesClaim?.Value == null) return new List<string>();
+
+        return rolesClaim.Value.Split(',').Distinct().ToList();
     }
 
     public UserInfo? ParseUserInfoFromToken(string accessToken)

@@ -50,7 +50,7 @@
                 "preserve.group.inheritance": ["false"],
                 "ignore.missing.groups": ["false"],
                 "membership.attribute.type": ["DN"],
-                "membership.user.ldap.attribute": ["uid"],
+                "membership.user.ldap.attribute": ["dn"],
                 "membership.ldap.attribute": ["member"],
                 "mapped.group.attributes": ["cn"],
                 "memberof.ldap.attribute": ["memberOf"]
@@ -59,7 +59,7 @@
           ]
         },
         "config": {
-          "editMode": ["READ_ONLY"],
+          "editMode": ["UNSYNCED"],
           "priority": ["0"],
           "enabled": ["true"],
           "connectionUrl": ["ldap://openldap:389"],
@@ -69,8 +69,8 @@
           "userObjectClasses": ["inetOrgPerson"],
           "usernameLDAPAttribute": ["uid"],
           "rdnLDAPAttribute": ["uid"],
-          "uuidLDAPAttribute": ["entryUUID"],
-          "userLDAPFilter": ["(objectClass=inetOrgPerson)"],
+          "uuidLDAPAttribute": ["uid"],
+          "userLDAPFilter": ["(&(objectClass=inetOrgPerson)(uid={0}))"],
           "searchScope": ["2"],
           "validatePasswordPolicy": ["false"],
           "trustEmail": ["true"],
@@ -116,7 +116,7 @@
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "protocol": "openid-connect",
-      "defaultClientScopes": ["openid", "profile", "email"],
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
       "optionalClientScopes": [],
       "attributes": {
         "post.logout.redirect.uris": "+"
@@ -132,6 +132,20 @@
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "sub",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
             "jsonType.label": "String"
           }
         }

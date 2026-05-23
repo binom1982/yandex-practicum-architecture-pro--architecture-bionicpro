@@ -59,3 +59,18 @@ LDAP
 Keycloak Admin Console: http://localhost:8080/admin (admin/admin)
 phpLDAPadmin: http://localhost:6443 (cn=admin,dc=example,dc=com / adminpassword)
 ```
+
+Тест LDAP
+
+```
+# Пересоздать Keycloak с обновлённым realm
+docker-compose up -d --force-recreate keycloak
+
+# Подождать запуска (~40 сек)
+sleep 40
+
+# Протестировать
+curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"john.doe","password":"password"}' | jq
+```

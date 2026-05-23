@@ -1,4 +1,5 @@
 ﻿using BionicproAuthService.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace BionicproAuthService.Middleware;
 
@@ -58,6 +59,7 @@ public class SessionValidationMiddleware
         // Устанавливаем данные в контекст для контроллеров
         context.Items["UserId"] = session.UserId;
         context.Items["AccessToken"] = session.AccessToken;
+        context.Items["Roles"] = ParseRolesFromToken(session.AccessToken);
 
         // 🔁 Ротация сессии (опционально, для защиты от fixation)
         var rotated = await sessionService.RotateSessionAsync(sessionId);
@@ -77,5 +79,17 @@ public class SessionValidationMiddleware
         }
 
         await _next(context);
+    }
+
+    private List<string> ParseRolesFromToken(string accessToken)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(accessToken);
+
+        // Keycloak кладёт роли в claim "realm_access.roles"
+        var rolesClaim = jwt.Claims.FirstOrDefault(c => c.Type == "realm_access.roles");
+        if (rolesClaim?.Value == null) return new List<string>();
+
+        return rolesClaim.Value.Split(',').Distinct().ToList();
     }
 }
