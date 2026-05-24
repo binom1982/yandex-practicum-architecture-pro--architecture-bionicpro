@@ -29,6 +29,7 @@ mail: jane@example.com
 userPassword: password
 
 dn: uid=alex.johnson,ou=People,dc=example,dc=com
+objectClass: top
 objectClass: inetOrgPerson
 cn: Alex
 sn: Johnson
