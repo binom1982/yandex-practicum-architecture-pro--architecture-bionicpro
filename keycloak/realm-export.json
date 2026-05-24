@@ -59,9 +59,8 @@
           ]
         },
         "config": {
-          "editMode": ["UNSYNCED"],
-          "priority": ["0"],
           "enabled": ["true"],
+          "priority": ["0"],
           "connectionUrl": ["ldap://openldap:389"],
           "bindDn": ["cn=admin,dc=example,dc=com"],
           "bindCredential": ["adminpassword"],
@@ -74,16 +73,13 @@
           "searchScope": ["2"],
           "validatePasswordPolicy": ["false"],
           "trustEmail": ["true"],
-          "syncRegistrations": ["false"],
-          "vendor": ["other"],
-          "usePasswordModifyExtendedOp": ["false"],
           "authType": ["simple"],
           "startTls": ["false"],
           "connectionPooling": ["true"],
           "pagination": ["true"],
-          "batchSizeForSync": ["1000"],
-          "fullSyncPeriod": ["-1"],
-          "changedSyncPeriod": ["-1"]
+          "editMode": ["UNSYNCED"],
+          "importEnabled": ["true"],
+          "syncMode": ["IMPORT"]
         }
       }
     ]
