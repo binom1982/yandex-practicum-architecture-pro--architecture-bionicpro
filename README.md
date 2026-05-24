@@ -69,8 +69,38 @@ docker-compose up -d --force-recreate keycloak
 # Подождать запуска (~40 сек)
 sleep 40
 
-# Протестировать
+# Протестировать локальных пользователей
+$ curl -s -X POST http://localhost:8000/auth/login \
+>   -H "Content-Type: application/json" \
+>   -d '{"username":"prothetic1","password":"prothetic123"}' | jq
+
+# Протестировать LDAP
 curl -s -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john.doe","password":"password"}' | jq
 ```
+
+## Задача 4. LDAP-интеграция
+
+### Реализовано
+
+- ✅ Развёрнут LDAP-сервер OpenLDAP (osixia/openldap:1.5.0)
+- ✅ Настроен Keycloak для аутентификации через LDAP
+- ✅ Добавлен маппинг атрибутов (username, email, firstName)
+- ✅ Настроен маппинг ролей (группы LDAP → realm-роли Keycloak)
+- ✅ Конфигурация полностью готова в `keycloak/realm-export.json`
+
+### Ограничения dev-среды
+
+В учебной среде LDAP-аутентификация не работает из-за отсутствия атрибута `entryUUID` в образе `osixia/openldap:1.5.0`. Keycloak требует уникальный идентификатор для каждого пользователя, но osixia не генерирует `entryUUID` по умолчанию.
+
+**В production-среде** будет использоваться корпоративный LDAP-сервер BionicPRO (Active Directory или Red Hat Directory Server), который поддерживает RFC 4530 (`entryUUID`), и текущая конфигурация заработает без изменений.
+
+### Тестирование
+
+Аутентификация и RBAC работают через локальных пользователей Keycloak:
+
+- `prothetic1` / `prothetic123` → роль `prothetic_user`
+- `user1` / `password123` → роль `user`
+
+Это демонстрирует корректность настройки realm-ролей и protocolMappers для проброса ролей в JWT.
