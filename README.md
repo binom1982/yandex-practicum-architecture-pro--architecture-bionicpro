@@ -70,9 +70,9 @@ docker-compose up -d --force-recreate keycloak
 sleep 40
 
 # Протестировать локальных пользователей
-$ curl -s -X POST http://localhost:8000/auth/login \
->   -H "Content-Type: application/json" \
->   -d '{"username":"prothetic1","password":"prothetic123"}' | jq
+curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"prothetic1","password":"prothetic123"}' | jq
 
 # Протестировать LDAP
 curl -s -X POST http://localhost:8000/auth/login \
