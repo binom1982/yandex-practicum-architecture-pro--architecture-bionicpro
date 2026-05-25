@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title BionicPRO - Задание 2: Сервис отчётов
+
+Person(user, "Пилот протеза / Покупатель")
+
+' Граница системы BionicPRO
+System_Boundary(bionicpro, "BionicPRO") {
+  Container(ui, "Web/UI", "React", "Интернет-магазин, приложение")
+  Container(auth, "bionicpro-auth", "C#", "Сессии, токены, HTTP-only cookies")
+  Container(reports_api, "bionicpro-reports", "C#", "Эндпоинт /reports, проверка прав")
+  Container(olap, "ClickHouse OLAP", "ClickHouse", "Витрина отчётности reports_vitrina")
+  
+  ContainerDb(crm_db, "CRM DB", "PostgreSQL", "Персональные данные")
+  ContainerDb(telemetry_db, "База данных", "PostgreSQL", "Телеметрия с протезов")
+}
+
+' Внешние/Отдельные системы
+Container(airflow, "Apache Airflow", "Python", "ETL-оркестратор, DAG по расписанию")
+
+' Связи
+Rel(ui, auth, "HTTPS: Set session cookie")
+Rel(ui, reports_api, "HTTPS: GET /reports/{userId} + session cookie")
+Rel(reports_api, auth, "Валидация сессии / user_id")
+Rel(reports_api, olap, "SQL: Запрос витрины по user_id")
+
+Rel(airflow, crm_db, "Extract: CRM данные")
+Rel(airflow, telemetry_db, "Extract: Телеметрия")
+Rel(airflow, olap, "Transform & Load: Витрина reports_vitrina")
+
+' Выделение новых компонентов
+UpdateElementStyle(reports_api, $bgColor=#E1F5FE)
+UpdateElementStyle(airflow, $bgColor=#E1F5FE)
+UpdateElementStyle(olap, $bgColor=#E1F5FE)
+@enduml

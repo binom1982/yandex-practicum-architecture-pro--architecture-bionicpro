@@ -104,3 +104,18 @@ curl -s -X POST http://localhost:8000/auth/login \
 - `user1` / `password123` → роль `user`
 
 Это демонстрирует корректность настройки realm-ролей и protocolMappers для проброса ролей в JWT.
+
+
+
+
+### Таблица доступов к сервисам
+
+| **Сервис** | **URL (Browser / Client)** | **Логин / Пароль**                 | **Описание / Назначение**          |
+| ---------------------- | -------------------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
+| Frontend (React)       | http://localhost:3000            | -                                                   | UI Интернет-магазина и ЛК пилота  |
+| bionicpro-auth         | http://localhost:8000            | -                                                   | API-шлюз авторизации (сессии, cookie) |
+| Keycloak Admin         | http://localhost:8080        | admin / admin                                  | Панель управления IdP, Realms, Users       |
+| Airflow Webserver      | http://localhost:8081        | admin / admin                                 | UI оркестратора ETL (DAGs)                     |
+| phpLDAPadmin           | http://localhost:6443        | cn=admin,dc=example,dc=com / adminpassword | GUI для просмотра OpenLDAP                     |
+| ClickHouse Play        | http://localhost:8123/play   | default / *(пусто)*                        | SQL-консоль OLAP базы                           |
+| Business DB (PG)       | localhost:5434               | bionic/ bionic                               | Источник данных (CRM/Телеметрия)   |

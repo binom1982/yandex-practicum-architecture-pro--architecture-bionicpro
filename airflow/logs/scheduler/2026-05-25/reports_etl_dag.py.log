@@ -1,0 +1,728 @@
+[2026-05-25T11:21:36.598+0000] {processor.py:161} INFO - Started process (PID=163) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:21:36.607+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:21:36.609+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:21:36.608+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:21:48.814+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:21:36.753+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:21:48.839+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:21:48.890+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.278 seconds
+[2026-05-25T11:22:19.005+0000] {processor.py:161} INFO - Started process (PID=168) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:19.009+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:22:19.011+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:22:19.010+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:19.034+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:22:19.029+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:22:19.035+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:19.073+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.075 seconds
+[2026-05-25T11:22:49.282+0000] {processor.py:161} INFO - Started process (PID=173) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:49.283+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:22:49.285+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:22:49.284+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:49.302+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:22:49.299+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:22:49.304+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:22:49.342+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.064 seconds
+[2026-05-25T11:23:19.469+0000] {processor.py:161} INFO - Started process (PID=178) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:19.471+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:23:19.473+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:23:19.472+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:19.495+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:23:19.489+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:23:19.497+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:19.533+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.069 seconds
+[2026-05-25T11:23:49.876+0000] {processor.py:161} INFO - Started process (PID=183) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:49.878+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:23:49.879+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:23:49.879+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:49.900+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:23:49.896+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:23:49.902+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:23:49.941+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.069 seconds
+[2026-05-25T11:24:23.034+0000] {processor.py:161} INFO - Started process (PID=188) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:24:23.035+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:24:23.037+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:24:23.036+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:24:23.065+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:24:23.061+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:24:23.067+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:24:23.104+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.075 seconds
+[2026-05-25T11:26:40.198+0000] {processor.py:161} INFO - Started process (PID=165) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:26:40.214+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:26:40.225+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:26:40.225+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:26:40.587+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:26:40.513+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:26:40.611+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:26:40.763+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.569 seconds
+[2026-05-25T11:27:02.387+0000] {processor.py:161} INFO - Started process (PID=170) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:02.396+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:27:02.429+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:02.424+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:02.625+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:02.568+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:27:02.670+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:02.804+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.433 seconds
+[2026-05-25T11:27:22.316+0000] {processor.py:161} INFO - Started process (PID=175) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:22.318+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:27:22.329+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:22.328+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:22.416+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:22.401+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:27:22.418+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:22.651+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.354 seconds
+[2026-05-25T11:27:42.371+0000] {processor.py:161} INFO - Started process (PID=180) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:42.374+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:27:42.375+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:42.375+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:42.416+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:27:42.409+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:27:42.418+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:27:42.490+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.125 seconds
+[2026-05-25T11:28:14.361+0000] {processor.py:161} INFO - Started process (PID=185) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:14.362+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:28:14.367+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:28:14.367+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:14.405+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:28:14.396+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:28:14.409+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:14.458+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.103 seconds
+[2026-05-25T11:28:38.195+0000] {processor.py:161} INFO - Started process (PID=190) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:38.198+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:28:38.207+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:28:38.199+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:38.725+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:28:38.412+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:28:38.781+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:28:38.869+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.678 seconds
+[2026-05-25T11:29:19.499+0000] {processor.py:161} INFO - Started process (PID=195) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:19.500+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:29:19.502+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:29:19.501+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:07.513+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:29:07.509+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:29:07.514+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:07.608+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.124 seconds
+[2026-05-25T11:29:39.899+0000] {processor.py:161} INFO - Started process (PID=200) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:39.903+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:29:39.909+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:29:39.907+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:39.943+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:29:39.938+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:29:39.944+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:39.993+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.099 seconds
+[2026-05-25T11:30:04.954+0000] {processor.py:161} INFO - Started process (PID=205) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:04.957+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:30:04.960+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:04.959+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:05.056+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:05.045+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:30:05.061+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:29:53.134+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.200 seconds
+[2026-05-25T11:30:25.058+0000] {processor.py:161} INFO - Started process (PID=210) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:25.059+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:30:25.061+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:25.060+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:25.102+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:25.093+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:30:25.103+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:13.140+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.102 seconds
+[2026-05-25T11:30:33.250+0000] {processor.py:161} INFO - Started process (PID=215) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:33.252+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:30:33.260+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:33.258+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:33.307+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:30:33.299+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:30:33.317+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:30:33.381+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.136 seconds
+[2026-05-25T11:31:15.219+0000] {processor.py:161} INFO - Started process (PID=220) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:15.221+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:31:15.224+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:31:15.223+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:15.245+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:31:15.241+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:31:15.248+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:15.297+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.084 seconds
+[2026-05-25T11:31:33.476+0000] {processor.py:161} INFO - Started process (PID=225) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:33.482+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:31:33.484+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:31:33.483+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:33.503+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:31:33.499+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:31:33.504+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:31:33.554+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.083 seconds
+[2026-05-25T11:32:03.699+0000] {processor.py:161} INFO - Started process (PID=230) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:03.700+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:32:03.701+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:32:03.701+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:03.721+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:32:03.716+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:32:03.722+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:03.760+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.070 seconds
+[2026-05-25T11:32:34.122+0000] {processor.py:161} INFO - Started process (PID=235) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:34.123+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:32:34.125+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:32:34.124+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:34.149+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:32:34.145+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:32:34.151+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:32:34.186+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.069 seconds
+[2026-05-25T11:33:04.378+0000] {processor.py:161} INFO - Started process (PID=240) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:04.380+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:33:04.387+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:33:04.387+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:04.450+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:33:04.438+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:33:04.457+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:04.539+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.166 seconds
+[2026-05-25T11:33:35.581+0000] {processor.py:161} INFO - Started process (PID=245) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:35.585+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:33:35.587+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:33:35.587+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:35.616+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:33:35.609+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:33:35.618+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:35.671+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.096 seconds
+[2026-05-25T11:34:05.858+0000] {processor.py:161} INFO - Started process (PID=250) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:34:05.860+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:34:05.861+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:34:05.861+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:34:05.883+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:34:05.877+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:33:53.870+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:33:53.919+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.081 seconds
+[2026-05-25T11:35:45.945+0000] {processor.py:161} INFO - Started process (PID=162) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:35:45.947+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:35:45.948+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:35:45.948+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:35:45.976+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:35:45.971+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:35:45.985+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:35:46.117+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.180 seconds
+[2026-05-25T11:36:26.305+0000] {processor.py:161} INFO - Started process (PID=167) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:26.307+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:36:26.312+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:26.311+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:14.363+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:14.351+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:36:14.372+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:14.474+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.189 seconds
+[2026-05-25T11:36:34.814+0000] {processor.py:161} INFO - Started process (PID=172) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:34.848+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:36:34.896+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:34.896+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:35.603+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:35.584+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:36:35.614+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:35.749+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.950 seconds
+[2026-05-25T11:36:55.308+0000] {processor.py:161} INFO - Started process (PID=177) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:55.356+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:36:55.373+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:55.371+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:55.497+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:36:55.452+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:36:55.512+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:36:55.662+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.361 seconds
+[2026-05-25T11:37:26.014+0000] {processor.py:161} INFO - Started process (PID=182) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:37:26.017+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:37:26.019+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:37:26.019+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:37:26.052+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:37:26.047+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:37:26.054+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:37:26.092+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.083 seconds
+[2026-05-25T11:38:01.665+0000] {processor.py:161} INFO - Started process (PID=187) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:38:01.669+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:38:01.679+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:38:01.678+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:37:50.011+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:37:49.768+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:37:50.013+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:37:50.112+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.478 seconds
+[2026-05-25T11:38:31.584+0000] {processor.py:161} INFO - Started process (PID=192) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:38:31.586+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:38:31.587+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:38:31.587+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:38:31.615+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:38:31.610+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:38:31.616+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:38:31.659+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.079 seconds
+[2026-05-25T11:39:01.989+0000] {processor.py:161} INFO - Started process (PID=197) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:01.990+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:39:01.991+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:39:01.991+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:02.009+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:39:02.005+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:39:02.011+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:02.042+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.057 seconds
+[2026-05-25T11:39:32.701+0000] {processor.py:161} INFO - Started process (PID=202) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:32.703+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:39:32.704+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:39:32.704+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:32.730+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:39:32.720+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:39:32.732+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:39:32.767+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.070 seconds
+[2026-05-25T11:40:07.053+0000] {processor.py:161} INFO - Started process (PID=207) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:07.054+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:40:07.058+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:40:07.057+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:07.083+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:40:07.079+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:40:07.085+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:07.156+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.108 seconds
+[2026-05-25T11:40:37.880+0000] {processor.py:161} INFO - Started process (PID=212) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:37.882+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:40:37.883+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:40:37.883+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:37.908+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:40:37.901+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:40:37.910+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:40:37.959+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.083 seconds
+[2026-05-25T11:41:08.472+0000] {processor.py:161} INFO - Started process (PID=217) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:08.475+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:41:08.480+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:41:08.480+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:08.546+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:41:08.542+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:41:08.549+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:08.612+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.147 seconds
+[2026-05-25T11:41:42.720+0000] {processor.py:161} INFO - Started process (PID=222) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:42.722+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:41:42.724+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:41:42.724+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:30.938+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:41:30.872+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:41:30.940+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:41:31.005+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.311 seconds
+[2026-05-25T11:44:15.955+0000] {processor.py:161} INFO - Started process (PID=163) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:15.957+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:44:15.975+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:44:15.975+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:16.037+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:44:16.032+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:44:16.043+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:16.129+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.184 seconds
+[2026-05-25T11:44:36.818+0000] {processor.py:161} INFO - Started process (PID=168) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:36.838+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:44:36.845+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:44:36.844+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:36.989+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:44:36.982+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:44:36.992+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:37.074+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.263 seconds
+[2026-05-25T11:44:58.323+0000] {processor.py:161} INFO - Started process (PID=173) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:44:58.337+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:44:58.369+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:44:58.368+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:01.231+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:45:01.122+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:45:01.249+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:01.468+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 3.178 seconds
+[2026-05-25T11:45:32.442+0000] {processor.py:161} INFO - Started process (PID=178) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:32.446+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:45:32.448+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:45:32.448+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:32.518+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:45:32.508+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:45:32.519+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:32.645+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.216 seconds
+[2026-05-25T11:45:57.329+0000] {processor.py:161} INFO - Started process (PID=183) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:57.331+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:45:57.333+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:45:57.332+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:57.373+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:45:57.360+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:45:57.375+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:45:57.474+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.170 seconds
+[2026-05-25T11:46:27.895+0000] {processor.py:161} INFO - Started process (PID=188) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:27.908+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:46:27.913+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:46:27.913+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:28.173+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:46:28.160+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:46:28.175+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:28.231+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.348 seconds
+[2026-05-25T11:46:59.088+0000] {processor.py:161} INFO - Started process (PID=193) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:59.089+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:46:59.091+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:46:59.090+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:59.117+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:46:59.112+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:46:59.118+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:46:59.156+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.072 seconds
+[2026-05-25T11:47:29.644+0000] {processor.py:161} INFO - Started process (PID=198) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:47:29.650+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:47:29.651+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:47:29.651+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:47:29.677+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:47:29.672+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:47:29.684+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:47:29.733+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.095 seconds
+[2026-05-25T11:48:04.560+0000] {processor.py:161} INFO - Started process (PID=203) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:04.561+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:48:04.563+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:04.563+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:04.585+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:04.580+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:48:04.586+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:04.624+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.070 seconds
+[2026-05-25T11:48:25.085+0000] {processor.py:161} INFO - Started process (PID=208) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:25.100+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:48:25.103+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:25.103+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:25.146+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:25.135+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:48:25.165+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:25.257+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.189 seconds
+[2026-05-25T11:48:48.515+0000] {processor.py:161} INFO - Started process (PID=213) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:48.527+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:48:48.561+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:48.559+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:48.673+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:48:48.666+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:48:48.675+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:48:48.723+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.217 seconds
+[2026-05-25T11:49:20.674+0000] {processor.py:161} INFO - Started process (PID=218) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:20.676+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:49:20.677+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:49:20.677+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:20.739+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:49:20.734+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:49:20.741+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:20.784+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.115 seconds
+[2026-05-25T11:49:38.864+0000] {processor.py:161} INFO - Started process (PID=223) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:38.866+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:49:38.867+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:49:38.867+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:38.892+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:49:38.887+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:49:38.894+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:49:38.935+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.076 seconds
+[2026-05-25T11:50:09.094+0000] {processor.py:161} INFO - Started process (PID=228) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:09.095+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:50:09.097+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:50:09.097+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:09.120+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:50:09.115+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:50:09.122+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:09.162+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.073 seconds
+[2026-05-25T11:50:45.664+0000] {processor.py:161} INFO - Started process (PID=233) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:45.667+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-05-25T11:50:45.669+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:50:45.668+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:45.701+0000] {logging_mixin.py:188} INFO - [2026-05-25T11:50:45.695+0000] {dagbag.py:348} ERROR - Failed to import: /opt/airflow/dags/reports_etl_dag.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 344, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/reports_etl_dag.py", line 4, in <module>
+    from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+ModuleNotFoundError: No module named 'airflow.providers.clickhouse'
+[2026-05-25T11:50:45.706+0000] {processor.py:842} WARNING - No viable dags retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-05-25T11:50:45.749+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.090 seconds

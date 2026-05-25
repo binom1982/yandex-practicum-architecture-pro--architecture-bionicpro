@@ -17,6 +17,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 120s  # <--- ДОБАВЬТЕ ЭТУ СТРОКУ
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
@@ -27,6 +28,11 @@ services:
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
       KC_HEALTH_ENABLED: "true"
+      # Добавьте настройки пула соединений:
+      KC_DB_POOL_INITIAL_SIZE: "2"
+      KC_DB_POOL_MIN_SIZE: "2"
+      KC_DB_POOL_MAX_SIZE: "10"
+      KC_DB_SCHEMA: public
     command: 
       - start-dev
       - --import-realm
@@ -39,11 +45,11 @@ services:
         condition: service_healthy
     healthcheck:
       # Проверка доступности порта без внешних утилит
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
+      test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config > /dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 60s  # Keycloak в dev-режиме запускается долго
+      start_period: 120s  # Keycloak в dev-режиме запускается долго
 
   # ─────────────────────────────────────────────────────
   # Redis для сессий bionicpro-auth
@@ -158,6 +164,111 @@ services:
       openldap:
         condition: service_healthy
 
+  # ─────────────────────────────────────────────────────
+  # OLAP
+  # ─────────────────────────────────────────────────────
+  x-airflow-common: &airflow-common
+    image: apache/airflow:2.8.1
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+
+  # === ClickHouse OLAP ===
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.12
+    container_name: bionicpro-clickhouse
+    ports:
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # Native
+    environment:
+      CLICKHOUSE_DB: reports_db
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # === Airflow metadata DB ===
+  airflow-postgres:
+    image: postgres:15
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  # === Airflow init (create user + migrate DB) ===
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@bionicpro.local
+
+  # === Airflow Webserver ===
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # === Airflow Scheduler ===
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+
+  # === Reports API (bionicpro-reports) ===
+  bionicpro-reports:
+    build: ./services/bionicpro-reports
+    container_name: bionicpro-reports
+    ports:
+      - "5001:8080"
+    environment:
+      CLICKHOUSE_CONN: "Host=clickhouse;Port=8123;Database=reports_db;Username=default;Password="
+      AUTH_SERVICE_URL: "http://bionicpro-auth:8080"
+      SESSION_COOKIE_NAME: "session_id"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
 volumes:
   ldap_data:
   ldap_config:
+  clickhouse-data:
+  airflow-pg-data:
