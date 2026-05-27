@@ -105,17 +105,21 @@ curl -s -X POST http://localhost:8000/auth/login \
 
 Это демонстрирует корректность настройки realm-ролей и protocolMappers для проброса ролей в JWT.
 
-
-
-
 ### Таблица доступов к сервисам
 
-| **Сервис** | **URL (Browser / Client)** | **Логин / Пароль**                 | **Описание / Назначение**          |
-| ---------------------- | -------------------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
-| Frontend (React)       | http://localhost:3000            | -                                                   | UI Интернет-магазина и ЛК пилота  |
-| bionicpro-auth         | http://localhost:8000            | -                                                   | API-шлюз авторизации (сессии, cookie) |
-| Keycloak Admin         | http://localhost:8080        | admin / admin                                  | Панель управления IdP, Realms, Users       |
-| Airflow Webserver      | http://localhost:8081        | admin / admin                                 | UI оркестратора ETL (DAGs)                     |
-| phpLDAPadmin           | http://localhost:6443        | cn=admin,dc=example,dc=com / adminpassword | GUI для просмотра OpenLDAP                     |
-| ClickHouse Play        | http://localhost:8123/play   | default / *(пусто)*                        | SQL-консоль OLAP базы                           |
-| Business DB (PG)       | localhost:5434               | bionic/ bionic                               | Источник данных (CRM/Телеметрия)   |
+| **Сервис**                   | **URL (Browser / Client)**                     | **Логин / Пароль**            | **Описание / Назначение**                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend (React)**               | **http://localhost:3000**                      | **-**                                    | **UI Интернет-магазина и ЛК пилота**                                                                |
+| **bionicpro-auth**                 | **http://localhost:8000**                      | **-**                                    | **BFF-сервис аутентификации: сессии, cookie, прокси к Keycloak**                            |
+| **bionicpro-reports**              | **http://localhost:5001**                      | **-**                                    | **API для генерации и выдачи отчётов из OLAP**                                                   |
+| **Keycloak Admin**                 | **http://localhost:8080**                      | **admin / admin**                        | **Панель управления IdP: realms, клиенты, пользователи, политики**                |
+| **Keycloak Realm (reports-realm)** | **http://localhost:8080/realms/reports-realm** | **-**                                    | **Публичный эндпоинт для авторизации (используется bionicpro-auth)**              |
+| **OpenLDAP**                       | **ldap://localhost:1389**                      | **cn=admin,dc=example,dc=com / adminpassword** | **Хранилище учётных записей для кросс-региональной аутентификации** |
+| **phpLDAPadmin**                   | **http://localhost:6443**                      | **cn=admin,dc=example,dc=com / adminpassword** | **Веб-интерфейс для просмотра и управления OpenLDAP**                                     |
+| **Redis**                          | **localhost:6379**                             | **-**                                    | **Хранилище сессий и токенов для bionicpro-auth**                                                  |
+| **Apache Airflow**                 | **http://localhost:8081**                      | **admin / admin**                        | **Оркестратор ETL-процессов: загрузка данных из CRM в ClickHouse**                      |
+| **ClickHouse**                     | **http://localhost:8123**                      | **default / (пусто)**               | **OLAP-база для витрины отчётности**                                                                 |
+| **ClickHouse Native**              | **localhost:9000**                             | **default / (пусто)**               | **Порт для подключения клиентов (KafkaEngine, JDBC)**                                              |
+| **Business DB (PostgreSQL)**       | **localhost:5434**                             | **bionic / bionic**                      | **Источник данных: CRM, заказы, пользователи, телеметрия**                         |
+| **Kafka Connect (Debezium)**       | **localhost:8083**                             | **-**                                    | **Коннектор CDC для репликации изменений из PostgreSQL в Kafka**                           |
+| **Kafka Broker**                   | **localhost:9092**                             | **-**                                    | **Топики для CDC-событий и ETL-пайплайнов**                                                       |
