@@ -104,31 +104,23 @@
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq",
-      "bearerOnly": false,
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
+      "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
       "protocol": "openid-connect",
-      "defaultClientScopes": ["openid", "profile", "email", "roles"],
-      "optionalClientScopes": [],
+      "redirectUris": [
+        "http://localhost:8000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8000",
+        "http://localhost:3000"
+      ],
       "attributes": {
-        "post.logout.redirect.uris": "+"
+        "post.logout.redirect.uris": "http://localhost:8000/*\nhttp://localhost:3000/*",
+        "pkce.code.challenge.method": "S256"
       },
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
       "protocolMappers": [
-        {
-          "name": "sub-mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-sub-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "sub",
-            "jsonType.label": "String"
-          }
-        },
         {
           "name": "realm-roles-mapper",
           "protocol": "openid-connect",
@@ -141,6 +133,20 @@
             "access.token.claim": "true",
             "claim.name": "realm_access.roles",
             "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "email-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "user.attribute": "email"
           }
         }
       ]

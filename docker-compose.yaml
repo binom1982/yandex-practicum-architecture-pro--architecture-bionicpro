@@ -1,15 +1,42 @@
+name: bionicpro
+
+# ─────────────────────────────────────────────────────
+# YAML-якорь для переиспользования (на корневом уровне)
+# ─────────────────────────────────────────────────────
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.8.1
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-clickhouse>=0.4.0"  # ← добавить
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./airflow/requirements.txt:/requirements.txt  # ← добавить
+  depends_on:
+    airflow-postgres:
+      condition: service_healthy
+  restart: on-failure
+
+# ─────────────────────────────────────────────────────
+# Сервисы
+# ─────────────────────────────────────────────────────
 services:
   # ─────────────────────────────────────────────────────
   # Keycloak + PostgreSQL
   # ─────────────────────────────────────────────────────
-  keycloak_db:
+  keycloak-db:  # ← тире вместо подчёркивания
     image: postgres:14
+    # container_name удалён — имя будет bionicpro-keycloak-db-1
     environment:
-      POSTGRES_DB: keycloak_db
+      POSTGRES_DB: keycloak_db  # ← имя БД внутри PostgreSQL (оставляем подчёркивание)
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: keycloak_password
     volumes:
-      - ./postgres-keycloak-data:/var/lib/postgresql/data
+      - keycloak-pg-data:/var/lib/postgresql/data  # ← тире в имени volume
     ports:
       - "5433:5432"
     healthcheck:
@@ -17,22 +44,23 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-      start_period: 300s  # 5 минут на инициализацию
+      start_period: 300s
+
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db  # ← ссылается на сервис keycloak-db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
       KC_HEALTH_ENABLED: "true"
-      # Добавьте настройки пула соединений:
       KC_DB_POOL_INITIAL_SIZE: "2"
       KC_DB_POOL_MIN_SIZE: "2"
       KC_DB_POOL_MAX_SIZE: "10"
       KC_DB_SCHEMA: public
+      KC_IMPORT_STRATEGY: OVERWRITE_EXISTING
     command: 
       - start-dev
       - --import-realm
@@ -41,19 +69,20 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      keycloak_db:
+      keycloak-db:  # ← обновлена ссылка
         condition: service_healthy
     restart: on-failure
+    # healthcheck:
+    #   disable: true  # ← только для dev!
     healthcheck:
-      # Проверка доступности порта без внешних утилит
-      test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/ || exit 1"]  # ← проще: проверяем корень
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 120s  # Keycloak в dev-режиме запускается долго
+      retries: 20
+      start_period: 300s
 
   # ─────────────────────────────────────────────────────
-  # Задание 1.3: auth-service
+  # Auth service
   # ─────────────────────────────────────────────────────
   bionicpro-auth:
     build:
@@ -62,29 +91,24 @@ services:
     ports:
       - "8000:8080"
     environment:
-      # Keycloak
       Keycloak__BaseUrl: http://keycloak:8080
       Keycloak__Realm: reports-realm
       Keycloak__ClientId: reports-api
       Keycloak__ClientSecret: oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq
-    
-      # Сессии
       Session__CookieName: bionicpro_session
       Session__SessionLifetimeMinutes: 60
       Session__AccessTokenLifetimeMinutes: 2
-      
-      # ASP.NET Core
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
     depends_on:
       keycloak:
-        condition: service_healthy
+        condition: service_started # service_healthy
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 30s  # Увеличено для инициализации .NET + подключений
+      start_period: 30s
 
   # ─────────────────────────────────────────────────────
   # Frontend
@@ -99,24 +123,17 @@ services:
       REACT_APP_API_URL: http://localhost:8000
       REACT_APP_AUTH_URL: http://localhost:8000
       REACT_APP_REPORTS_URL: http://localhost:5001
-
-      # API теперь идёт через bionicpro-auth, а не напрямую в reports-api
-      # REACT_APP_API_URL: http://localhost:8000
-      # REACT_APP_KEYCLOAK_URL: http://localhost:8080
-      # REACT_APP_KEYCLOAK_REALM: reports-realm
-      # REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
     depends_on:
       bionicpro-auth:
         condition: service_healthy
 
   # ─────────────────────────────────────────────────────
-  # Задание 1.4: LDAP
+  # LDAP
   # ─────────────────────────────────────────────────────
   openldap:
-    image: osixia/openldap:1.5.0  # стабильная версия с Docker Hub [[22]]
-    container_name: bionicpro-ldap
+    image: osixia/openldap:1.5.0
     ports:
-      - "1389:389"   # исправлен порт: внутренний 389, не 1389
+      - "1389:389"
       - "1636:636"
     environment:
       - LDAP_ORGANISATION=BionicPRO
@@ -126,9 +143,9 @@ services:
       - LDAP_TLS=false
     volumes:
       - ./ldap/config.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config.ldif:ro
-      - ldap_data:/var/lib/ldap
-      - ldap_config:/etc/ldap/slapd.d
-    command: ["--copy-service"]  # важно для применения LDIF при старте
+      - ldap-data:/var/lib/ldap  # ← тире
+      - ldap-config:/etc/ldap/slapd.d  # ← тире
+    command: ["--copy-service"]
     healthcheck:
       test: ["CMD", "ldapsearch", "-x", "-b", "dc=example,dc=com", "-D", "cn=admin,dc=example,dc=com", "-w", "adminpassword", "objectClass=*"]
       interval: 10s
@@ -137,10 +154,9 @@ services:
       start_period: 30s
 
   phpldapadmin:
-    image: osixia/phpldapadmin:0.9.0  # совместимая версия [[11]]
-    container_name: bionicpro-ldap-admin
+    image: osixia/phpldapadmin:0.9.0
     ports:
-      - "6443:80"  # HTTP, т.к. PHPLDAPADMIN_HTTPS=false
+      - "6443:80"
     environment:
       - PHPLDAPADMIN_LDAP_HOSTS=openldap
       - PHPLDAPADMIN_HTTPS=false
@@ -149,34 +165,15 @@ services:
         condition: service_healthy
 
   # ─────────────────────────────────────────────────────
-  # Задание 2: OLAP
+  # OLAP
   # ─────────────────────────────────────────────────────
-  x-airflow-common: &airflow-common
-    image: apache/airflow:2.8.1
-    environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
-      AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-clickhouse 
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./airflow/plugins:/opt/airflow/plugins
-    depends_on:
-      airflow-postgres:
-        condition: service_healthy
-    restart: on-failure
- 
-  # === ClickHouse OLAP ===
   clickhouse:
     image: clickhouse/clickhouse-server:23.12
-    container_name: bionicpro-clickhouse
     ports:
-      - "8123:8123"   # HTTP
-      - "9000:9000"   # Native
+      - "8123:8123"
+      - "9000:9000"
     environment:
-      CLICKHOUSE_DB: reports_db
+      CLICKHOUSE_DB: reports_db  # ← имя БД внутри ClickHouse (подчёркивание)
       CLICKHOUSE_USER: default
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     volumes:
@@ -188,10 +185,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # === Airflow metadata DB ===
-  airflow-postgres:
+  airflow-postgres:  # ← уже с тире, оставляем
     image: postgres:15
-    container_name: airflow-postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -203,10 +198,8 @@ services:
       interval: 5s
       retries: 5
 
-  # === Airflow init (create user + migrate DB) ===
   airflow-init:
     <<: *airflow-common
-    container_name: airflow-init
     entrypoint: /bin/bash
     command:
       - -c
@@ -220,10 +213,8 @@ services:
           --role Admin \
           --email admin@bionicpro.local
 
-  # === Airflow Webserver ===
   airflow-webserver:
     <<: *airflow-common
-    container_name: airflow-webserver
     command: webserver
     ports:
       - "8081:8080"
@@ -233,16 +224,15 @@ services:
       timeout: 10s
       retries: 5
 
-  # === Airflow Scheduler ===
   airflow-scheduler:
     <<: *airflow-common
-    container_name: airflow-scheduler
     command: scheduler
 
-  # === Reports API (bionicpro-reports) ===
+  # ─────────────────────────────────────────────────────
+  # Reports API
+  # ─────────────────────────────────────────────────────
   bionicpro-reports:
     build: ./services/bionicpro-reports
-    container_name: bionicpro-reports
     ports:
       - "5001:8080"
     environment:
@@ -253,8 +243,12 @@ services:
       clickhouse:
         condition: service_healthy
 
+# ─────────────────────────────────────────────────────
+# Volumes (все с тире)
+# ─────────────────────────────────────────────────────
 volumes:
-  ldap_data:
-  ldap_config:
+  keycloak-pg-data:
+  ldap-data:
+  ldap-config:
   clickhouse-data:
   airflow-pg-data:
