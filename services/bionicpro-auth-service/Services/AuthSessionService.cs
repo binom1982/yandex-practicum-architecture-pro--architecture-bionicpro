@@ -6,72 +6,6 @@ using System.Text;
 
 namespace BionicproAuthService.Services;
 
-public class SessionSecurityOptions
-{
-    /// <summary>
-    /// Ключ шифрования для токенов (мин. 32 символа для AES-256)
-    /// </summary>
-    public string EncryptionKey { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Алгоритм шифрования (по умолчанию AES)
-    /// </summary>
-    public string EncryptionAlgorithm { get; set; } = "AES";
-
-    /// <summary>
-    /// Требовать HTTPS для cookie (в prod = true)
-    /// </summary>
-    public bool RequireSecureCookie { get; set; } = false;
-}
-
-public class AuthSessionOptions
-{
-    /// <summary>
-    /// Имя cookie для сессии
-    /// </summary>
-    public string CookieName { get; set; } = "bionicpro_session";
-
-    /// <summary>
-    /// Время жизни сессии в минутах (по умолчанию 24 часа)
-    /// </summary>
-    public int SessionLifetimeMinutes { get; set; } = 1440;
-
-    /// <summary>
-    /// Флаг: продлевать сессию при каждом запросе
-    /// </summary>
-    public bool SlidingExpiration { get; set; } = true;
-}
-
-public class KeycloakOptions
-{
-    /// <summary>
-    /// Базовый URL Keycloak (для внутренних вызовов)
-    /// </summary>
-    public string AuthUrl { get; set; } = "http://keycloak:8080";
-
-    /// <summary>
-    ///realm Keycloak
-    /// </summary>
-    public string Realm { get; set; } = "reports-realm";
-
-    /// <summary>
-    /// Client ID для этого сервиса
-    /// </summary>
-    public string ClientId { get; set; } = "reports-api";
-
-    /// <summary>
-    /// Client Secret для confidential client
-    /// </summary>
-    public string ClientSecret { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Публичный базовый URL для редиректов (браузер видит этот адрес)
-    /// </summary>
-    public string BaseUrl { get; set; } = "http://localhost:8000";
-}
-
-
-
 public interface IAuthSessionService
 {
     Task<AuthSession?> CreateSessionAsync(TokenResponse tokens, string userId);
@@ -81,7 +15,6 @@ public interface IAuthSessionService
     Task DeleteSessionAsync(string sessionId);
 }
 
-// Models/AuthSession.cs
 public class AuthSession
 {
     public string SessionId { get; set; } = Guid.NewGuid().ToString("N");

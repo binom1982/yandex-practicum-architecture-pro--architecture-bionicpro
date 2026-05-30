@@ -53,7 +53,7 @@ services:
       start_period: 120s  # Keycloak в dev-режиме запускается долго
 
   # ─────────────────────────────────────────────────────
-  # bionicpro-auth-service
+  # Задание 1.3: auth-service
   # ─────────────────────────────────────────────────────
   bionicpro-auth:
     build:
@@ -110,7 +110,7 @@ services:
         condition: service_healthy
 
   # ─────────────────────────────────────────────────────
-  # Задание 1.: LDAP
+  # Задание 1.4: LDAP
   # ─────────────────────────────────────────────────────
   openldap:
     image: osixia/openldap:1.5.0  # стабильная версия с Docker Hub [[22]]
@@ -158,13 +158,15 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
       AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-clickhouse 
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
     depends_on:
       airflow-postgres:
-        condition: service_started #service_healthy
+        condition: service_healthy
+    restart: on-failure
  
   # === ClickHouse OLAP ===
   clickhouse:

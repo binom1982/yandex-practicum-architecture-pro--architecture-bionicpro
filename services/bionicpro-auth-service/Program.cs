@@ -1,7 +1,9 @@
 using BionicproAuthService.Middleware;
+using BionicproAuthService.Models;
 using BionicproAuthService.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,14 +33,15 @@ builder.Services.AddSession(o =>
 // ─────────────────────────────────────────────────────
 // HTTP Client for Keycloak
 // ─────────────────────────────────────────────────────
-builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>();
-//builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
-//{
-//    var baseUrl = builder.Configuration["Keycloak:AuthUrl"] ?? "http://keycloak:8080";
-//    client.BaseAddress = new Uri(baseUrl);
-//    client.DefaultRequestHeaders.Accept.Add(
-//        new MediaTypeWithQualityHeaderValue("application/json"));
-//});
+
+builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
+{
+    var baseUrl = builder.Configuration["Keycloak:AuthUrl"] ?? "http://keycloak:8080";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
 
 // ─────────────────────────────────────────────────────
 // Services
