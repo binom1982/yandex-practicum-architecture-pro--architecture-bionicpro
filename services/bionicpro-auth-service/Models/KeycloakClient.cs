@@ -1,34 +1,40 @@
-﻿using BionicproAuthService.Models;
+﻿using BionicproAuthService.Services;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace BionicproAuthService.Models;
 
-// ─────────────────────────────────────────────────────────────
-// Опции конфигурации
-// ─────────────────────────────────────────────────────────────
-public record KeycloakOptions
-{
-    public string BaseUrl { get; init; } = string.Empty;
-    public string Realm { get; init; } = string.Empty;
-    public string ClientId { get; init; } = string.Empty;
-    public string ClientSecret { get; init; } = string.Empty;
-}
 
 // ─────────────────────────────────────────────────────────────
 // Модели
 // ─────────────────────────────────────────────────────────────
-public record TokenResponse(
-    [property: JsonPropertyName("access_token")] string AccessToken,
-    [property: JsonPropertyName("refresh_token")] string RefreshToken,
-    [property: JsonPropertyName("id_token")] string? IdToken,
-    [property: JsonPropertyName("expires_in")] int ExpiresIn,
-    [property: JsonPropertyName("refresh_expires_in")] int RefreshExpiresIn,
-    [property: JsonPropertyName("token_type")] string TokenType = "Bearer",
-    [property: JsonPropertyName("scope")] string? Scope = null);
+//public record TokenResponse(
+//    [property: JsonPropertyName("access_token")] string AccessToken,
+//    [property: JsonPropertyName("refresh_token")] string RefreshToken,
+//    [property: JsonPropertyName("id_token")] string? IdToken,
+//    [property: JsonPropertyName("expires_in")] int ExpiresIn,
+//    [property: JsonPropertyName("refresh_expires_in")] int RefreshExpiresIn,
+//    [property: JsonPropertyName("token_type")] string TokenType = "Bearer",
+//    [property: JsonPropertyName("scope")] string? Scope = null);
+
+public record TokenResponse
+{
+    [JsonPropertyName("access_token")]
+    public string AccessToken { get; init; } = string.Empty;
+
+    [JsonPropertyName("refresh_token")]
+    public string RefreshToken { get; init; } = string.Empty;
+
+    [JsonPropertyName("expires_in")]
+    public int ExpiresIn { get; init; }
+
+    [JsonPropertyName("refresh_expires_in")]
+    public int RefreshExpiresIn { get; init; }
+
+    [JsonPropertyName("token_type")]
+    public string TokenType { get; init; } = "Bearer";
+}
 
 public record UserInfo(
     string Sub,
@@ -43,10 +49,10 @@ public record UserInfo(
 // ─────────────────────────────────────────────────────────────
 public interface IKeycloakClient
 {
-    Task<TokenResponse?> AuthenticateAsync(string username, string password);
-    Task<TokenResponse?> RefreshTokenAsync(string refreshToken);
-    Task<UserInfo?> GetUserInfoAsync(string accessToken);
-    Task<bool> LogoutAsync(string refreshToken);
+    string BuildAuthorizationUrl(string redirectUri, string state, string codeChallenge, string codeChallengeMethod);
+    Task<TokenResponse?> ExchangeCodeForTokensAsync(string code, string codeVerifier);
+    Task<TokenResponse?> RefreshAccessTokenAsync(string refreshToken);
+    Task RevokeTokenAsync(string token);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -54,97 +60,71 @@ public interface IKeycloakClient
 // ─────────────────────────────────────────────────────────────
 public class KeycloakClient : IKeycloakClient
 {
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _http;
     private readonly KeycloakOptions _options;
 
-    public KeycloakClient(IOptions<KeycloakOptions> options, HttpClient httpClient)
+    public KeycloakClient(HttpClient http, IOptions<KeycloakOptions> options)
     {
+        _http = http;
         _options = options.Value;
-        _httpClient = httpClient;
     }
 
-    public async Task<TokenResponse?> AuthenticateAsync(string username, string password)
-    {
-        var endpoint = $"/realms/{_options.Realm}/protocol/openid-connect/token";
+    public string BuildAuthorizationUrl(string redirectUri, string state, string codeChallenge, string codeChallengeMethod) =>
+        $"{_options.AuthUrl}/realms/{_options.Realm}/protocol/openid-connect/auth" +
+        $"?client_id={_options.ClientId}" +
+        $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+        $"&response_type=code" +
+        $"&scope=openid" +
+        $"&state={state}" +
+        $"&code_challenge={codeChallenge}" +
+        $"&code_challenge_method={codeChallengeMethod}";
 
+    public async Task<TokenResponse?> ExchangeCodeForTokensAsync(string code, string codeVerifier)
+    {
         var content = new FormUrlEncodedContent(new[]
         {
-            new KeyValuePair<string, string>("grant_type", "password"),
+            new KeyValuePair<string, string>("grant_type", "authorization_code"),
+            new KeyValuePair<string, string>("code", code),
+            new KeyValuePair<string, string>("redirect_uri", $"{_options.BaseUrl}/auth/callback"),
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
-            new KeyValuePair<string, string>("username", username),
-            new KeyValuePair<string, string>("password", password),
-            new KeyValuePair<string, string>("scope", "openid profile email")
+            new KeyValuePair<string, string>("code_verifier", codeVerifier),
         });
 
-        var response = await _httpClient.PostAsync(endpoint, content);
-        var rawContent = await response.Content.ReadAsStringAsync();
+        var resp = await _http.PostAsync(
+            $"{_options.AuthUrl}/realms/{_options.Realm}/protocol/openid-connect/token", content);
 
-        Console.WriteLine($"[Keycloak] Raw response: {rawContent}");
-
-        if (!response.IsSuccessStatusCode)
-        {
-            Console.WriteLine($"[Keycloak] Error: {response.StatusCode}");
-            return null;
-        }
-
-        var tokens = await response.Content.ReadFromJsonAsync<TokenResponse>();
-
-        Console.WriteLine($"[Keycloak] Parsed AccessToken: {(tokens?.AccessToken?.Substring(0, 20) ?? "null")}...");
-
-        return tokens;
+        if (!resp.IsSuccessStatusCode) return null;
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<TokenResponse>(json);
     }
 
-    public async Task<TokenResponse?> RefreshTokenAsync(string refreshToken)
+    public async Task<TokenResponse?> RefreshAccessTokenAsync(string refreshToken)
     {
-        var endpoint = $"/realms/{_options.Realm}/protocol/openid-connect/token";
-
         var content = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("grant_type", "refresh_token"),
+            new KeyValuePair<string, string>("refresh_token", refreshToken),
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
-            new KeyValuePair<string, string>("refresh_token", refreshToken)
         });
 
-        var response = await _httpClient.PostAsync(endpoint, content);
-        if (!response.IsSuccessStatusCode) return null;
+        var resp = await _http.PostAsync(
+            $"{_options.AuthUrl}/realms/{_options.Realm}/protocol/openid-connect/token", content);
 
-        return await response.Content.ReadFromJsonAsync<TokenResponse>();
+        if (!resp.IsSuccessStatusCode) return null;
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<TokenResponse>(json);
     }
 
-    public async Task<UserInfo?> GetUserInfoAsync(string accessToken)
+    public async Task RevokeTokenAsync(string token)
     {
-        var endpoint = $"/realms/{_options.Realm}/protocol/openid-connect/userinfo";
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", accessToken);
-
-        try
-        {
-            var response = await _httpClient.GetAsync(endpoint);
-            if (!response.IsSuccessStatusCode) return null;
-
-            return await response.Content.ReadFromJsonAsync<UserInfo>();
-        }
-        finally
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = null;
-        }
-    }
-
-    public async Task<bool> LogoutAsync(string refreshToken)
-    {
-        var endpoint = $"/realms/{_options.Realm}/protocol/openid-connect/logout";
-
         var content = new FormUrlEncodedContent(new[]
         {
+            new KeyValuePair<string, string>("token", token),
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
-            new KeyValuePair<string, string>("refresh_token", refreshToken)
         });
-
-        var response = await _httpClient.PostAsync(endpoint, content);
-        return response.IsSuccessStatusCode;
+        await _http.PostAsync($"{_options.AuthUrl}/realms/{_options.Realm}/protocol/openid-connect/revoke", content);
     }
 }

@@ -1,78 +1,127 @@
 using BionicproAuthService.Middleware;
-using BionicproAuthService.Models;
 using BionicproAuthService.Services;
-using System.Net.Http.Headers;
-using System.Text.Json;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ─────────────────────────────────────────────────────
 // Configuration
+// ─────────────────────────────────────────────────────
 builder.Services.Configure<KeycloakOptions>(
     builder.Configuration.GetSection("Keycloak"));
 builder.Services.Configure<AuthSessionOptions>(
-    builder.Configuration.GetSection("Session"));
+    builder.Configuration.GetSection("AuthSession"));
+builder.Services.Configure<SessionSecurityOptions>(
+    builder.Configuration.GetSection("SessionSecurity"));
 
-// Redis cache
-builder.Services.AddStackExchangeRedisCache(options =>
+// ─────────────────────────────────────────────────────
+// Session (in-memory, no Redis)
+// ─────────────────────────────────────────────────────
+builder.Services.AddDistributedMemoryCache(); // для хранения PKCE state
+builder.Services.AddSession(o =>
 {
-    options.Configuration = builder.Configuration["Redis:ConnectionString"];
-    options.InstanceName = "bionicpro:";
-
-    Console.WriteLine($"[Redis] Config: ConnectionString={options.Configuration}, InstanceName={options.InstanceName}");
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    o.Cookie.SameSite = SameSiteMode.Lax;
+    o.Cookie.Name = "bionicpro_auth_session";
+    o.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
+// ─────────────────────────────────────────────────────
 // HTTP Client for Keycloak
-builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["Keycloak:BaseUrl"]!);
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
-});
-
-// Services
-builder.Services.AddScoped<IAuthSessionService, AuthSessionService>();
-
-// API
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-//builder.Services.AddOpenApi();
-
-//builder.Services.Configure<JsonSerializerOptions>(options =>
+// ─────────────────────────────────────────────────────
+builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>();
+//builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
 //{
-//    options.PropertyNameCaseInsensitive = true;
-//    options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+//    var baseUrl = builder.Configuration["Keycloak:AuthUrl"] ?? "http://keycloak:8080";
+//    client.BaseAddress = new Uri(baseUrl);
+//    client.DefaultRequestHeaders.Accept.Add(
+//        new MediaTypeWithQualityHeaderValue("application/json"));
 //});
 
+// ─────────────────────────────────────────────────────
+// Services
+// ─────────────────────────────────────────────────────
+// Стало (добавьте оба IOptions):
+builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>(sp =>
+{
+    var securityOpts = sp.GetRequiredService<IOptions<SessionSecurityOptions>>();
+    var sessionOpts = sp.GetRequiredService<IOptions<AuthSessionOptions>>();
+    return new InMemorySessionService(securityOpts, sessionOpts);
+});
+
+// ─────────────────────────────────────────────────────
+// API + Swagger
+// ─────────────────────────────────────────────────────
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "bionicpro-auth", Version = "v1" });
-});
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-
-    app.UseSwagger();  // Генерирует /swagger/v1/swagger.json
-    app.UseSwaggerUI(c =>
+    // 🔹 Security Definition для cookie
+    c.AddSecurityDefinition("cookie", new OpenApiSecurityScheme
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "bionicpro-auth v1");
-        c.RoutePrefix = "swagger";  // UI доступен по /swagger
+        Name = "bionicpro_session",           // имя куки
+        Type = SecuritySchemeType.ApiKey,     // тип: API ключ
+        In = ParameterLocation.Cookie,        // передаётся в куки
+        Description = "Session cookie для авторизованных запросов"
     });
 
-//   app.MapOpenApi();
-//}
+    // 🔹 Security Requirement — применяет схему к эндпоинтам
+    /*c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                //Reference = new OpenApiReference
+                //{
+                //    Type = ReferenceType.SecurityScheme,
+                //    Id = "cookie"  // ссылка на определение выше
+                //}
+            },
+            new List<string>() // scopes (пусто для ApiKey)
+        }
+    });*/
+});
+
+// ─────────────────────────────────────────────────────
+// CORS — разрешаем фронтенду
+// ─────────────────────────────────────────────────────
+builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => p
+    .WithOrigins("http://localhost:3000")
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials())); // важно для куки
+
+// ─────────────────────────────────────────────────────
+// Build app
+// ─────────────────────────────────────────────────────
+var app = builder.Build();
+
+// ─────────────────────────────────────────────────────
+// Middleware pipeline
+// ─────────────────────────────────────────────────────
+// Swagger — всегда включён (для dev), в prod можно обернуть в if
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "bionicpro-auth v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowFrontend"); // ← CORS до авторизации
+app.UseSession();             // ← сессии до контроллеров
 app.UseMiddleware<SessionValidationMiddleware>();
-//app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+// Health check
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+// Root redirect to Swagger (удобно для dev)
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();

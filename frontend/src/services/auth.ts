@@ -1,9 +1,9 @@
 const AUTH_URL = process.env.REACT_APP_AUTH_URL;
 
+;
 export const initiateLogin = () => {
   window.location.href = `${AUTH_URL}/auth/login?redirect=${window.location.origin}`;
-};
-
+}
 export const checkSession = async (): Promise<boolean> => {
   try {
     const res = await fetch(`${AUTH_URL}/auth/session`, { credentials: 'include' });

@@ -1,204 +1,191 @@
 ﻿using BionicproAuthService.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 
 namespace BionicproAuthService.Services;
 
-public record AuthRequest(string Username, string Password);
+public class SessionSecurityOptions
+{
+    /// <summary>
+    /// Ключ шифрования для токенов (мин. 32 символа для AES-256)
+    /// </summary>
+    public string EncryptionKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Алгоритм шифрования (по умолчанию AES)
+    /// </summary>
+    public string EncryptionAlgorithm { get; set; } = "AES";
+
+    /// <summary>
+    /// Требовать HTTPS для cookie (в prod = true)
+    /// </summary>
+    public bool RequireSecureCookie { get; set; } = false;
+}
 
 public class AuthSessionOptions
 {
-    public string CookieName { get; init; } = "bionicpro_session";
-    public int SessionLifetimeMinutes { get; init; } = 60;
-    public int AccessTokenLifetimeMinutes { get; init; } = 2;
+    /// <summary>
+    /// Имя cookie для сессии
+    /// </summary>
+    public string CookieName { get; set; } = "bionicpro_session";
+
+    /// <summary>
+    /// Время жизни сессии в минутах (по умолчанию 24 часа)
+    /// </summary>
+    public int SessionLifetimeMinutes { get; set; } = 1440;
+
+    /// <summary>
+    /// Флаг: продлевать сессию при каждом запросе
+    /// </summary>
+    public bool SlidingExpiration { get; set; } = true;
 }
 
-public record AuthSessionData(
-    string SessionId,
-    string AccessToken,
-    string RefreshToken,
-    DateTime CreatedAt,
-    DateTime ExpiresAt,
-    string UserId);
+public class KeycloakOptions
+{
+    /// <summary>
+    /// Базовый URL Keycloak (для внутренних вызовов)
+    /// </summary>
+    public string AuthUrl { get; set; } = "http://keycloak:8080";
+
+    /// <summary>
+    ///realm Keycloak
+    /// </summary>
+    public string Realm { get; set; } = "reports-realm";
+
+    /// <summary>
+    /// Client ID для этого сервиса
+    /// </summary>
+    public string ClientId { get; set; } = "reports-api";
+
+    /// <summary>
+    /// Client Secret для confidential client
+    /// </summary>
+    public string ClientSecret { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Публичный базовый URL для редиректов (браузер видит этот адрес)
+    /// </summary>
+    public string BaseUrl { get; set; } = "http://localhost:8000";
+}
+
+
 
 public interface IAuthSessionService
 {
-    Task<AuthSessionData?> CreateSessionAsync(TokenResponse tokens, string userId);
-    Task<AuthSessionData?> GetSessionAsync(string sessionId);
-    Task<bool> RotateSessionAsync(string sessionId);
-    Task<bool> DeleteSessionAsync(string sessionId);
-    Task<bool> RefreshAccessTokenAsync(string sessionId);
+    Task<AuthSession?> CreateSessionAsync(TokenResponse tokens, string userId);
+    Task<AuthSession?> GetSessionAsync(string sessionId);
+    Task<AuthSession?> RotateSessionAsync(AuthSession session);
+    Task UpdateSessionAsync(AuthSession session);
+    Task DeleteSessionAsync(string sessionId);
 }
 
-public class AuthSessionService : IAuthSessionService
+// Models/AuthSession.cs
+public class AuthSession
 {
-    private readonly IDistributedCache _cache;
-    private readonly IKeycloakClient _keycloakClient;
-    private readonly AuthSessionOptions _options;
-    private readonly TimeSpan _sessionTtl;
-    private readonly TimeSpan _accessTtl;
+    public string SessionId { get; set; } = Guid.NewGuid().ToString("N");
+    public string UserId { get; set; } = string.Empty;
+    public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public DateTime AccessTokenExpiresAt { get; set; }
+    public DateTime RefreshTokenExpiresAt { get; set; }
+    public DateTime ExpiresAt { get; set; }
 
-    public AuthSessionService(
-        IDistributedCache cache,
-        IKeycloakClient keycloakClient,
-        IOptions<AuthSessionOptions> options)
+    public bool IsExpired => DateTime.UtcNow > ExpiresAt;
+    public bool IsAccessTokenExpired => DateTime.UtcNow > AccessTokenExpiresAt;
+}
+
+// Services/InMemorySessionService.cs
+public class InMemorySessionService : IAuthSessionService
+{
+    private readonly ConcurrentDictionary<string, AuthSession> _sessions = new();
+    private readonly Aes _aes;
+    private readonly AuthSessionOptions _sessionOptions; // ← Добавьте это поле
+
+    public InMemorySessionService(
+        IOptions<SessionSecurityOptions> securityOpts,  // для шифрования
+        IOptions<AuthSessionOptions> sessionOpts)       // ← Добавьте этот параметр
     {
-        _cache = cache;
-        _keycloakClient = keycloakClient;
-        _options = options.Value;
-        _sessionTtl = TimeSpan.FromMinutes(_options.SessionLifetimeMinutes);
-        _accessTtl = TimeSpan.FromMinutes(_options.AccessTokenLifetimeMinutes);
+        _aes = Aes.Create();
+        _aes.Key = Encoding.UTF8.GetBytes(
+            securityOpts.Value.EncryptionKey.PadRight(32).Substring(0, 32));
+        _aes.IV = new byte[16];
+
+        _sessionOptions = sessionOpts.Value; // ← Сохраните опции
     }
 
-    public async Task<AuthSessionData?> CreateSessionAsync(TokenResponse tokens, string userId)
+    public Task<AuthSession?> CreateSessionAsync(TokenResponse tokens, string userId)
     {
-        try
+        var now = DateTime.UtcNow;
+        var session = new AuthSession
         {
-            Console.WriteLine($"[Session] Creating session for userId: {userId}");
-
-            var sessionId = GenerateSecureId();
-            Console.WriteLine($"[Session] Generated sessionId: {sessionId}");
-
-            var session = new AuthSessionData(
-                SessionId: sessionId,
-                UserId: userId,
-                AccessToken: Encrypt(tokens.AccessToken),      // ← Проверьте Encrypt()
-                RefreshToken: Encrypt(tokens.RefreshToken),    // ← Проверьте Encrypt()
-                CreatedAt: DateTime.UtcNow,
-                ExpiresAt: DateTime.UtcNow.AddMinutes(_options.SessionLifetimeMinutes)
-            );
-
-            Console.WriteLine($"[Session] Serialized session, AccessToken length: {tokens.AccessToken?.Length}");
-
-            await SaveSessionAsync(session);
-
-            // 🔍 Проверка: действительно ли сохранилось?
-            var key = $"session:{sessionId}";
-            var verify = await _cache.GetAsync(key);
-            Console.WriteLine($"[Session] Verify save for key '{key}': {(verify != null ? "OK" : "FAILED")}");
-
-            return session;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Session] ERROR in CreateSessionAsync: {ex.GetType().Name}: {ex.Message}");
-            Console.WriteLine($"[Session] Stack: {ex.StackTrace}");
-            throw; // ← Не глотать исключение!
-        }
-    }
-
-    public async Task<AuthSessionData?> GetSessionAsync(string sessionId)
-    {
-        var data = await _cache.GetAsync($"session:{sessionId}");
-        if (data == null || data.Length == 0) return null;
-
-        var session = JsonSerializer.Deserialize<AuthSessionData>(data);
-        if (session?.ExpiresAt < DateTime.UtcNow)
-        {
-            await DeleteSessionAsync(sessionId);
-            return null;
-        }
-        return session;
-    }
-
-    public async Task<bool> RotateSessionAsync(string sessionId)
-    {
-        var session = await GetSessionAsync(sessionId);
-        if (session == null) return false;
-
-        await DeleteSessionAsync(sessionId);
-
-        var newSession = session with
-        {
-            SessionId = GenerateSecureId(),
-            ExpiresAt = DateTime.UtcNow.Add(_sessionTtl)
+            UserId = userId,
+            AccessToken = Encrypt(tokens.AccessToken),
+            RefreshToken = Encrypt(tokens.RefreshToken),
+            AccessTokenExpiresAt = now.AddSeconds(tokens.ExpiresIn),
+            RefreshTokenExpiresAt = now.AddSeconds(tokens.RefreshExpiresIn),
+            ExpiresAt = now.AddMinutes(_sessionOptions.SessionLifetimeMinutes) // ✅ теперь работает
         };
-
-        await SaveSessionAsync(newSession);
-        return true;
+        _sessions[session.SessionId] = session;
+        return Task.FromResult<AuthSession?>(session);
     }
 
-    public async Task<bool> RefreshAccessTokenAsync(string sessionId)
+    public Task<AuthSession?> GetSessionAsync(string sessionId) =>
+        Task.FromResult(_sessions.TryGetValue(sessionId, out var s) && !s.IsExpired ? DecryptSession(s) : null);
+
+    public Task<AuthSession?> RotateSessionAsync(AuthSession session)
     {
-        var session = await GetSessionAsync(sessionId);
-        if (session == null) return false;
-
-        var refreshToken = Decrypt(session.RefreshToken);
-        var newTokens = await _keycloakClient.RefreshTokenAsync(refreshToken);
-        if (newTokens == null) return false;
-
-        var updatedSession = session with
+        _sessions.TryRemove(session.SessionId, out _);
+        var newSession = new AuthSession
         {
-            AccessToken = newTokens.AccessToken,
-            RefreshToken = Encrypt(newTokens.RefreshToken)
+            UserId = session.UserId,
+            AccessToken = session.AccessToken, // уже зашифрованы
+            RefreshToken = session.RefreshToken,
+            AccessTokenExpiresAt = session.AccessTokenExpiresAt,
+            RefreshTokenExpiresAt = session.RefreshTokenExpiresAt,
+            ExpiresAt = session.ExpiresAt
         };
-
-        await SaveSessionAsync(updatedSession);
-        return true;
+        _sessions[newSession.SessionId] = newSession;
+        return Task.FromResult<AuthSession?>(newSession);
     }
 
-    public async Task<bool> DeleteSessionAsync(string sessionId)
+    public Task UpdateSessionAsync(AuthSession session)
     {
-        await _cache.RemoveAsync($"session:{sessionId}");
-        return true;
+        _sessions[session.SessionId] = session;
+        return Task.CompletedTask;
     }
 
-    private async Task SaveSessionAsync(AuthSessionData session)
+    public Task DeleteSessionAsync(string sessionId)
     {
-        try
-        {
-            var key = $"session:{session.SessionId}";
-            Console.WriteLine($"[Redis] Saving to key: {key}");
-
-            var data = JsonSerializer.SerializeToUtf8Bytes(session);
-            Console.WriteLine($"[Redis] Serialized data length: {data.Length}");
-
-            await _cache.SetAsync(key, data, new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.SessionLifetimeMinutes)
-            });
-
-            Console.WriteLine($"[Redis] SetAsync completed");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Redis] ERROR: {ex.GetType().Name}: {ex.Message}");
-            if (ex.InnerException != null)
-                Console.WriteLine($"[Redis] Inner: {ex.InnerException.Message}");
-            throw;
-        }
+        _sessions.TryRemove(sessionId, out _);
+        return Task.CompletedTask;
     }
 
-    private string GenerateSecureId()
+    private string Encrypt(string plain)
     {
-        var bytes = new byte[32];
-        RandomNumberGenerator.Fill(bytes);
-        return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
-    }
-
-    private string Encrypt(string plainText)
-    {
-        if (string.IsNullOrEmpty(plainText)) return plainText;
-
-        try
-        {
-            // Ваша логика шифрования
-
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(plainText));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Encrypt] Error: {ex.Message}");
-            throw;
-        }
+        using var encryptor = _aes.CreateEncryptor();
+        var bytes = Encoding.UTF8.GetBytes(plain);
+        var encrypted = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        return Convert.ToBase64String(encrypted);
     }
 
     private string Decrypt(string encrypted)
     {
-        return Encoding.UTF8.GetString(Convert.FromBase64String(encrypted));
+        using var decryptor = _aes.CreateDecryptor();
+        var bytes = Convert.FromBase64String(encrypted);
+        var decrypted = decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        return Encoding.UTF8.GetString(decrypted);
     }
+
+    private AuthSession DecryptSession(AuthSession s) => new()
+    {
+        SessionId = s.SessionId,
+        UserId = s.UserId,
+        AccessToken = Decrypt(s.AccessToken),
+        RefreshToken = Decrypt(s.RefreshToken),
+        AccessTokenExpiresAt = s.AccessTokenExpiresAt,
+        RefreshTokenExpiresAt = s.RefreshTokenExpiresAt,
+        ExpiresAt = s.ExpiresAt
+    };
 }
