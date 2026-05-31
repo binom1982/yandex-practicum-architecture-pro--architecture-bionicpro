@@ -27,6 +27,11 @@ public class AuthController : ControllerBase
         _sessionService = sessionService;
         _sessionOptions = options.Value;
         _logger = logger;
+
+        // 🔹 НОВОЕ: Лог для проверки, что сервис один экземпляр (Singleton)
+        _logger.LogDebug("AuthController instance hash: {HashCode}", GetHashCode());
+        _logger.LogDebug("AuthSession options: CookieName={CookieName}, Lifetime={Lifetime}min",
+            _sessionOptions.CookieName, _sessionOptions.SessionLifetimeMinutes);
     }
 
     // 🔹 GET /auth/login — инициация PKCE flow
@@ -47,11 +52,11 @@ public class AuthController : ControllerBase
 
         // 🔹 Сохраняем ОБА параметра в сессии
         HttpContext.Session.SetString($"pkce_{state}", codeVerifier);
-        HttpContext.Session.SetString($"redirect_{state}", frontendRedirect); // ← новое
+        HttpContext.Session.SetString($"redirect_{state}", frontendRedirect);
         _logger.LogDebug("PKCE state created: {State}, Frontend redirect: {Redirect}", state, frontendRedirect);
 
         var keycloakUrl = _keycloak.BuildAuthorizationUrl(
-            redirectUri: $"{Request.Scheme}://{Request.Host}/auth/callback", // ← callback на этот сервис
+            redirectUri: $"{Request.Scheme}://{Request.Host}/auth/callback",
             state: state,
             codeChallenge: codeChallenge,
             codeChallengeMethod: "S256");
@@ -95,7 +100,7 @@ public class AuthController : ControllerBase
         }
 
         // 🔹 Обмениваем code на токены
-        var tokens = await _keycloak.ExchangeCodeForTokensAsync(code, codeVerifier);
+        var tokens = await _keycloak.ExchangeCodeForTokensAsync(code!, codeVerifier); // 🔹 НОВОЕ: ! для подавления предупреждения
         if (tokens == null)
         {
             _logger.LogError("Token exchange failed for state: {State}", state);
@@ -142,7 +147,7 @@ public class AuthController : ControllerBase
         _logger.LogInformation("Session created for user: {UserId}, SessionId: {SessionId}",
             sub, session.SessionId);
 
-        // 🔹 🔹 ВОССТАНАВЛИВАЕМ redirect_uri из сессии (а не используем state!)
+        // 🔹 ВОССТАНАВЛИВАЕМ redirect_uri из сессии (а не используем state!)
         var targetRedirect = HttpContext.Session.GetString($"redirect_{state}") ?? "http://localhost:3000";
         HttpContext.Session.Remove($"redirect_{state}"); // очищаем
 
@@ -158,14 +163,23 @@ public class AuthController : ControllerBase
     {
         if (!Request.Cookies.TryGetValue(_sessionOptions.CookieName, out var sessionId))
         {
-            _logger.LogDebug("No session cookie found");
+            _logger.LogWarning("No session cookie found. Available cookies: {Cookies}",
+                string.Join(", ", Request.Cookies.Keys));
             return Unauthorized();
+        }
+
+        _logger.LogDebug("Session cookie received: {SessionId}", sessionId);
+
+        // 🔹 НОВОЕ: Лог для отладки — сколько сессий в словаре
+        if (_sessionService is InMemorySessionService inMemory)
+        {
+            _logger.LogDebug("Sessions in dictionary: {Count}", inMemory.GetSessionCountForDebug());
         }
 
         var session = await _sessionService.GetSessionAsync(sessionId);
         if (session == null || session.IsExpired)
         {
-            _logger.LogDebug("Session not found or expired: {SessionId}", sessionId);
+            _logger.LogWarning("Session not found or expired: {SessionId}", sessionId);
             Response.Cookies.Delete(_sessionOptions.CookieName);
             return Unauthorized();
         }
@@ -181,7 +195,7 @@ public class AuthController : ControllerBase
                 new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = Request.IsHttps,
+                    Secure = false, // 🔹 НОВОЕ: отключено для dev, в prod вернуть Request.IsHttps
                     SameSite = SameSiteMode.Lax,
                     Expires = newSession.ExpiresAt,
                     Path = "/"
@@ -223,7 +237,6 @@ public class AuthController : ControllerBase
             else
             {
                 _logger.LogWarning("Failed to refresh access token for user: {UserId}", session.UserId);
-                // Не блокируем запрос — вернём данные со старым токеном, если он ещё валиден в Keycloak
             }
         }
 

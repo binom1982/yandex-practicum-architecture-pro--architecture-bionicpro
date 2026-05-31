@@ -116,9 +116,16 @@ services:
       Keycloak__Realm: reports-realm
       Keycloak__ClientId: reports-api
       Keycloak__ClientSecret: oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq
-      Session__CookieName: bionicpro_session
-      Session__SessionLifetimeMinutes: 60
-      Session__AccessTokenLifetimeMinutes: 2
+      
+      # 🔹 AuthSession настройки (должны совпадать с GetSection("AuthSession"))
+      AuthSession__CookieName: bionicpro_session
+      AuthSession__SessionLifetimeMinutes: 60  # ← если хотите переопределить дефолт 1440
+      
+      # 🔹 SessionSecurity настройки (для шифрования)
+      SessionSecurity__EncryptionKey: "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6"  # ← обязательно 32 символа
+      SessionSecurity__EncryptionAlgorithm: AES
+      SessionSecurity__RequireSecureCookie: false
+
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
     depends_on:

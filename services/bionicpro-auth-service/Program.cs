@@ -2,9 +2,9 @@ using BionicproAuthService.Middleware;
 using BionicproAuthService.Models;
 using BionicproAuthService.Services;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using System.Net.Http.Headers;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +27,7 @@ builder.Services.AddSession(o =>
     o.Cookie.HttpOnly = true;
     o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     o.Cookie.SameSite = SameSiteMode.Lax;
-    o.Cookie.Name = "bionicpro_auth_session";
+    o.Cookie.Name = "bionicpro_infra_session";
     o.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
@@ -37,7 +37,7 @@ builder.Services.AddSession(o =>
 
 builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
 {
-    var baseUrl = builder.Configuration["Keycloak:AuthUrl"] ?? "http://keycloak:8080";
+    var baseUrl = builder.Configuration["Keycloak:InternalUrl"] ?? "http://keycloak:8080";
     client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
@@ -48,12 +48,16 @@ builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>(client =>
 // Services
 // ─────────────────────────────────────────────────────
 // Стало (добавьте оба IOptions):
-builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>(sp =>
-{
-    var securityOpts = sp.GetRequiredService<IOptions<SessionSecurityOptions>>();
-    var sessionOpts = sp.GetRequiredService<IOptions<AuthSessionOptions>>();
-    return new InMemorySessionService(securityOpts, sessionOpts);
-});
+builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>();
+//builder.Services.AddSingleton<IAuthSessionService, InMemorySessionService>(sp =>
+//{
+//    var securityOpts = sp.GetRequiredService<IOptions<SessionSecurityOptions>>();
+//    var sessionOpts = sp.GetRequiredService<IOptions<AuthSessionOptions>>();
+
+//    // 🔹 Логгер получаем из ServiceProvider — он уже зарегистрирован!
+//    var logger = sp.GetRequiredService<ILogger<AuthController>>();
+//    return new InMemorySessionService(securityOpts, sessionOpts, logger);
+//});
 
 // ─────────────────────────────────────────────────────
 // API + Swagger
@@ -73,21 +77,23 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Session cookie для авторизованных запросов"
     });
 
-    // 🔹 Security Requirement — применяет схему к эндпоинтам
-    /*c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                //Reference = new OpenApiReference
-                //{
-                //    Type = ReferenceType.SecurityScheme,
-                //    Id = "cookie"  // ссылка на определение выше
-                //}
-            },
-            new List<string>() // scopes (пусто для ApiKey)
-        }
-    });*/
+
+
+    // 🔹 Раскомментируйте для авто-подстановки куки в Swagger UI:
+    //c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    //{
+    //    {
+    //        new OpenApiSecurityScheme
+    //        {
+    //            Reference = new OpenApiReference
+    //            {
+    //                Type = ReferenceType.SecurityScheme,
+    //                Id = "cookie"
+    //            }
+    //        },
+    //        new List<string>()
+    //    }
+    //});
 });
 
 // ─────────────────────────────────────────────────────
@@ -103,7 +109,7 @@ builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information); // или Debug для детальных логов
 
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    //.PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
     .SetApplicationName("bionicpro-auth");
 
 // ─────────────────────────────────────────────────────
