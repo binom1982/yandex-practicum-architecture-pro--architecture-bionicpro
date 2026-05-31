@@ -9,16 +9,20 @@ x-airflow-common: &airflow-common
     context: ./airflow
     dockerfile: Dockerfile
   environment:
-    # Postgres connections
+    # 🔹 Обязательно: подключение к PostgreSQL (одинаково для всех сервисов)
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    
+    # Fernet key для шифрования (должен быть одинаковым)
+    AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
+    
+    # Остальные настройки
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    
+    # Подключения к внешним БД
     AIRFLOW_CONN_CRM_DB: 'postgresql://crm_user:crm_pass@crmpostgres:5432/crm_db'
     AIRFLOW_CONN_TELEMETRY_DB: 'postgresql://tel_user:tel_pass@telemetrypostgres:5432/telemetry_db'
-    # ClickHouse (для справки, если будете использовать SqlOperator в будущем)
     AIRFLOW_CONN_CLICKHOUSE_OLAP: 'clickhouse+native://default:@clickhouse:9000/reports_db'
-    # AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    # AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
-    # AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
-    # AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    # _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-clickhouse>=0.4.0"  # ← добавить
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
@@ -96,17 +100,19 @@ services:
     build:
       context: ./services/bionicpro-auth-service
       dockerfile: Dockerfile
+    # user: "1000:1000"  # ← запускать процесс от UID:GID 1000
     ports:
       - "8000:8080"
-    volumes:
-    - auth-keys:/app/keys  # ← примонтировать volume
+    # volumes:
+    # - auth-keys:/app/keys  # ← примонтировать volume
     environment:
       # 🔹 PublicUrl — для браузера (редиректы, redirect_uri)
       Keycloak__PublicUrl: http://localhost:8080    
       # 🔹 InternalUrl — для серверных вызовов к Keycloak
       Keycloak__InternalUrl: http://keycloak:8080
+      #Keycloak__AuthServiceUrl: http://localhost:8000  # ← добавить
 
-      Keycloak__CallbackUrl: http://localhost:3000  # Куда Keycloak редиректит после логина
+      #Keycloak__CallbackUrl: http://localhost:3000  # Куда Keycloak редиректит после логина
       Keycloak__Realm: reports-realm
       Keycloak__ClientId: reports-api
       Keycloak__ClientSecret: oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq
@@ -210,8 +216,10 @@ services:
       - airflow-pg-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 5s
+      interval: 10s
+      timeout: 5s
       retries: 5
+      start_period: 30s  # ← Ключевое: игнорируем сбои первые 30 сек
 
   airflow-init:
     <<: *airflow-common
@@ -291,4 +299,4 @@ volumes:
   ldap-config:
   clickhouse-data:
   airflow-pg-data:
-  auth-keys: 
+  #auth-keys: 

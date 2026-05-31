@@ -45,28 +45,30 @@ public class KeycloakClient : IKeycloakClient
 
     public async Task<TokenResponse?> ExchangeCodeForTokensAsync(string code, string codeVerifier)
     {
+        // 🔹 redirect_uri должен ТОЧНО совпадать с тем, что был в авторизационном запросе!
+        // Это адрес ВАШЕГО сервиса (bionicpro-auth), куда Keycloak вернул код
+        //var callbackUri = "http://localhost:8000/auth/callback";
+        var callbackUri = $"{_options.AuthServiceUrl}/auth/callback";
+
+
         var content = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("grant_type", "authorization_code"),
             new KeyValuePair<string, string>("code", code),
-            new KeyValuePair<string, string>("redirect_uri", $"{_options.CallbackUrl}/auth/callback"),
+            new KeyValuePair<string, string>("redirect_uri", callbackUri), // ← всегда один и тот же
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
             new KeyValuePair<string, string>("code_verifier", codeVerifier),
         });
 
         _logger.LogInformation("Exchanging code for tokens. Code: {CodePrefix}..., Redirect: {RedirectUri}",
-            code.Substring(0, Math.Min(8, code.Length)),
-            $"{_options.PublicUrl}/auth/callback");
+            code.Substring(0, Math.Min(8, code.Length)), callbackUri);
 
         var resp = await _http.PostAsync(
             $"{_options.InternalUrl}/realms/{_options.Realm}/protocol/openid-connect/token", content);
 
         var responseBody = await resp.Content.ReadAsStringAsync();
-
-        // 🔹 Логирование ответа — именно здесь!
-        _logger.LogWarning("Keycloak token response: {StatusCode} - {ResponseBody}",
-            resp.StatusCode, responseBody);
+        _logger.LogDebug("Keycloak token response: {StatusCode} - {ResponseBody}", resp.StatusCode, responseBody);
 
         if (!resp.IsSuccessStatusCode)
         {

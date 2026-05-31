@@ -1,5 +1,4 @@
 ﻿using BionicproAuthService.Models;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
@@ -30,23 +29,24 @@ public class AuthSession
     public bool IsAccessTokenExpired => DateTime.UtcNow > AccessTokenExpiresAt;
 }
 
-// Services/InMemorySessionService.cs
 public class InMemorySessionService : IAuthSessionService
 {
     private readonly ConcurrentDictionary<string, AuthSession> _sessions = new();
     private readonly Aes _aes;
-    private readonly AuthSessionOptions _sessionOptions; // ← Добавьте это поле
+    private readonly AuthSessionOptions _sessionOptions; // ← Поле для опций сессии
 
     public InMemorySessionService(
         IOptions<SessionSecurityOptions> securityOpts,  // для шифрования
-        IOptions<AuthSessionOptions> sessionOpts)       // ← Добавьте этот параметр
+        IOptions<AuthSessionOptions> sessionOpts)       // ← Добавлен параметр для сессий
     {
+        // 🔹 Настройка AES
         _aes = Aes.Create();
         _aes.Key = Encoding.UTF8.GetBytes(
             securityOpts.Value.EncryptionKey.PadRight(32).Substring(0, 32));
-        _aes.IV = new byte[16];
+        _aes.IV = new byte[16]; // для dev-среды; в prod используйте случайный IV
 
-        _sessionOptions = sessionOpts.Value; // ← Сохраните опции
+        // 🔹 Сохраняем опции сессии
+        _sessionOptions = sessionOpts.Value;
     }
 
     public Task<AuthSession?> CreateSessionAsync(TokenResponse tokens, string userId)
@@ -59,7 +59,8 @@ public class InMemorySessionService : IAuthSessionService
             RefreshToken = Encrypt(tokens.RefreshToken),
             AccessTokenExpiresAt = now.AddSeconds(tokens.ExpiresIn),
             RefreshTokenExpiresAt = now.AddSeconds(tokens.RefreshExpiresIn),
-            ExpiresAt = now.AddMinutes(_sessionOptions.SessionLifetimeMinutes) // ✅ теперь работает
+            // 🔹 Используем _sessionOptions.SessionLifetimeMinutes
+            ExpiresAt = now.AddMinutes(_sessionOptions.SessionLifetimeMinutes)
         };
         _sessions[session.SessionId] = session;
         return Task.FromResult<AuthSession?>(session);
@@ -70,11 +71,14 @@ public class InMemorySessionService : IAuthSessionService
 
     public Task<AuthSession?> RotateSessionAsync(AuthSession session)
     {
+        // Удаляем старую сессию
         _sessions.TryRemove(session.SessionId, out _);
+
+        // Создаём новую с новым SessionId, но с теми же данными
         var newSession = new AuthSession
         {
             UserId = session.UserId,
-            AccessToken = session.AccessToken, // уже зашифрованы
+            AccessToken = session.AccessToken,  // уже зашифрованы
             RefreshToken = session.RefreshToken,
             AccessTokenExpiresAt = session.AccessTokenExpiresAt,
             RefreshTokenExpiresAt = session.RefreshTokenExpiresAt,
@@ -96,30 +100,25 @@ public class InMemorySessionService : IAuthSessionService
         return Task.CompletedTask;
     }
 
-    // 🔹 Если шифруете в стандартный Base64:
-    private string Encrypt(string plainText)
+    // 🔹 Шифрование (стандартный Base64)
+    private string Encrypt(string plain)
     {
-        var bytes = Encoding.UTF8.GetBytes(plainText);
-        var encrypted = _aes.Encrypt(bytes, _key, _iv);
-        return Convert.ToBase64String(encrypted);  // ← стандартный Base64
+        using var encryptor = _aes.CreateEncryptor();
+        var bytes = Encoding.UTF8.GetBytes(plain);
+        var encrypted = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        return Convert.ToBase64String(encrypted);
     }
 
+    // 🔹 Дешифрование (стандартный Base64)
     private string Decrypt(string encrypted)
     {
-        try
-        {
-            var bytes = Convert.FromBase64String(encrypted);  // ← должно соответствовать Encrypt
-            var decrypted = _aes.Decrypt(bytes, _key, _iv);
-            return Encoding.UTF8.GetString(decrypted);
-        }
-        catch (FormatException ex)
-        {
-            _logger.LogError(ex, "Failed to decrypt: invalid Base64 input='{Input}'",
-                encrypted?.Substring(0, Math.Min(20, encrypted?.Length ?? 0)));
-            return null;
-        }
+        using var decryptor = _aes.CreateDecryptor();
+        var bytes = Convert.FromBase64String(encrypted);
+        var decrypted = decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        return Encoding.UTF8.GetString(decrypted);
     }
 
+    // 🔹 Возвращает сессию с расшифрованными токенами
     private AuthSession DecryptSession(AuthSession s) => new()
     {
         SessionId = s.SessionId,

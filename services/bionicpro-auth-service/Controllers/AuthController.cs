@@ -36,19 +36,22 @@ public class AuthController : ControllerBase
     {
         _logger.LogInformation("Initiating PKCE login. Redirect: {Redirect}", redirect ?? "default");
 
-        var redirectUri = string.IsNullOrEmpty(redirect)
-            ? $"{Request.Scheme}://{Request.Host}"
+        // 🔹 Определяем целевой redirect_uri для фронтенда
+        var frontendRedirect = string.IsNullOrEmpty(redirect)
+            ? "http://localhost:3000"  // дефолт для фронтенда
             : redirect;
 
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
         var state = Guid.NewGuid().ToString("N");
 
+        // 🔹 Сохраняем ОБА параметра в сессии
         HttpContext.Session.SetString($"pkce_{state}", codeVerifier);
-        _logger.LogDebug("PKCE state created: {State}", state);
+        HttpContext.Session.SetString($"redirect_{state}", frontendRedirect); // ← новое
+        _logger.LogDebug("PKCE state created: {State}, Frontend redirect: {Redirect}", state, frontendRedirect);
 
         var keycloakUrl = _keycloak.BuildAuthorizationUrl(
-            redirectUri: $"{Request.Scheme}://{Request.Host}/auth/callback",
+            redirectUri: $"{Request.Scheme}://{Request.Host}/auth/callback", // ← callback на этот сервис
             state: state,
             codeChallenge: codeChallenge,
             codeChallengeMethod: "S256");
@@ -81,8 +84,9 @@ public class AuthController : ControllerBase
         }
 
         _logger.LogDebug("Processing callback. State: {State}, Code prefix: {CodePrefix}",
-            state, code.Substring(0, Math.Min(8, code.Length)));
+            state, code?.Substring(0, Math.Min(8, code?.Length ?? 0)));
 
+        // 🔹 Восстанавливаем code_verifier
         var codeVerifier = HttpContext.Session.GetString($"pkce_{state}");
         if (string.IsNullOrEmpty(codeVerifier))
         {
@@ -90,6 +94,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = "invalid_state" });
         }
 
+        // 🔹 Обмениваем code на токены
         var tokens = await _keycloak.ExchangeCodeForTokensAsync(code, codeVerifier);
         if (tokens == null)
         {
@@ -99,6 +104,7 @@ public class AuthController : ControllerBase
 
         _logger.LogDebug("Token exchange successful for state: {State}", state);
 
+        // 🔹 Извлекаем sub из access_token
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(tokens.AccessToken);
         var sub = jwt.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
@@ -109,6 +115,7 @@ public class AuthController : ControllerBase
             return Unauthorized(new { error = "invalid_token" });
         }
 
+        // 🔹 Создаём сессию
         var session = await _sessionService.CreateSessionAsync(tokens, sub);
         if (session == null)
         {
@@ -116,8 +123,10 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { error = "session_creation_failed" });
         }
 
+        // 🔹 Очищаем временные данные из сессии
         HttpContext.Session.Remove($"pkce_{state}");
 
+        // 🔹 Устанавливаем secure cookie
         Response.Cookies.Append(
             _sessionOptions.CookieName,
             session.SessionId,
@@ -133,9 +142,9 @@ public class AuthController : ControllerBase
         _logger.LogInformation("Session created for user: {UserId}, SessionId: {SessionId}",
             sub, session.SessionId);
 
-        var targetRedirect = Uri.IsWellFormedUriString(state, UriKind.Absolute)
-            ? state
-            : $"{Request.Scheme}://{Request.Host}";
+        // 🔹 🔹 ВОССТАНАВЛИВАЕМ redirect_uri из сессии (а не используем state!)
+        var targetRedirect = HttpContext.Session.GetString($"redirect_{state}") ?? "http://localhost:3000";
+        HttpContext.Session.Remove($"redirect_{state}"); // очищаем
 
         _logger.LogInformation("Redirecting back to frontend: {TargetRedirect}", targetRedirect);
         return Redirect(targetRedirect);
@@ -161,7 +170,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        // Ротация сессии
+        // 🔹 Ротация сессии
         var newSession = await _sessionService.RotateSessionAsync(session);
         if (newSession != null && newSession.SessionId != sessionId)
         {
@@ -199,7 +208,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        // Обновление access_token при истечении
+        // 🔹 Обновление access_token при истечении
         if (session.IsAccessTokenExpired)
         {
             _logger.LogDebug("Access token expired, attempting refresh for user: {UserId}", session.UserId);
@@ -214,7 +223,7 @@ public class AuthController : ControllerBase
             else
             {
                 _logger.LogWarning("Failed to refresh access token for user: {UserId}", session.UserId);
-                // Не блокируем запрос — вернём данные с старым токеном если он ещё валиден в Keycloak
+                // Не блокируем запрос — вернём данные со старым токеном, если он ещё валиден в Keycloak
             }
         }
 

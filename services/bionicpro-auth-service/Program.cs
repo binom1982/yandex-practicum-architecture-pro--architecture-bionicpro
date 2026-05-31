@@ -1,6 +1,7 @@
 using BionicproAuthService.Middleware;
 using BionicproAuthService.Models;
 using BionicproAuthService.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using System.Net.Http.Headers;
@@ -100,6 +101,10 @@ builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => p
 
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Information); // или Debug для детальных логов
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("bionicpro-auth");
 
 // ─────────────────────────────────────────────────────
 // Build app

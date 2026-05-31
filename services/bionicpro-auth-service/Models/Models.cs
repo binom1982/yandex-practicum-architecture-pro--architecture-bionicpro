@@ -50,10 +50,7 @@ public class KeycloakOptions
     /// </summary>
     public string PublicUrl { get; set; } = "http://localhost:8080";
 
-    /// <summary>
-    /// Куда Keycloak редиректит после логина
-    /// </summary>
-    public string CallbackUrl { get; set; } = "http://localhost:3000";
+    public string AuthServiceUrl { get; set; } = "http://localhost:8000";
 
     public string Realm { get; set; } = "reports-realm";
     public string ClientId { get; set; } = "reports-api";
