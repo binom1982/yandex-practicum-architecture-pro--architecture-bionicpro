@@ -16,15 +16,25 @@ public class KeycloakClient : IKeycloakClient
 {
     private readonly HttpClient _http;
     private readonly KeycloakOptions _options;
+    private readonly ILogger<KeycloakClient> _logger;  // ← Добавьте поле
 
-    public KeycloakClient(HttpClient http, IOptions<KeycloakOptions> options)
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    public KeycloakClient(
+        HttpClient http,
+        IOptions<KeycloakOptions> options,
+        ILogger<KeycloakClient> logger)  // ← Добавьте параметр в конструктор
     {
         _http = http;
         _options = options.Value;
+        _logger = logger;  // ← Сохраните логгер
     }
 
     public string BuildAuthorizationUrl(string redirectUri, string state, string codeChallenge, string codeChallengeMethod) =>
-        $"{_options.PublicUrl}/realms/{_options.Realm}/protocol/openid-connect/auth" +  // ← PublicUrl для браузера
+        $"{_options.PublicUrl}/realms/{_options.Realm}/protocol/openid-connect/auth" +
         $"?client_id={_options.ClientId}" +
         $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
         $"&response_type=code" +
@@ -39,19 +49,32 @@ public class KeycloakClient : IKeycloakClient
         {
             new KeyValuePair<string, string>("grant_type", "authorization_code"),
             new KeyValuePair<string, string>("code", code),
-            new KeyValuePair<string, string>("redirect_uri", $"{_options.PublicUrl}/auth/callback"), // ← Public для редиректа
+            new KeyValuePair<string, string>("redirect_uri", $"{_options.CallbackUrl}/auth/callback"),
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
             new KeyValuePair<string, string>("code_verifier", codeVerifier),
         });
 
-        // ← InternalUrl для сервер-сервер вызова
+        _logger.LogInformation("Exchanging code for tokens. Code: {CodePrefix}..., Redirect: {RedirectUri}",
+            code.Substring(0, Math.Min(8, code.Length)),
+            $"{_options.PublicUrl}/auth/callback");
+
         var resp = await _http.PostAsync(
             $"{_options.InternalUrl}/realms/{_options.Realm}/protocol/openid-connect/token", content);
 
-        if (!resp.IsSuccessStatusCode) return null;
-        var json = await resp.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<TokenResponse>(json);
+        var responseBody = await resp.Content.ReadAsStringAsync();
+
+        // 🔹 Логирование ответа — именно здесь!
+        _logger.LogWarning("Keycloak token response: {StatusCode} - {ResponseBody}",
+            resp.StatusCode, responseBody);
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            _logger.LogError("Token exchange failed with status {StatusCode}", resp.StatusCode);
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<TokenResponse>(responseBody, _jsonOptions);
     }
 
     public async Task<TokenResponse?> RefreshAccessTokenAsync(string refreshToken)
@@ -67,9 +90,11 @@ public class KeycloakClient : IKeycloakClient
         var resp = await _http.PostAsync(
             $"{_options.InternalUrl}/realms/{_options.Realm}/protocol/openid-connect/token", content);
 
+        var responseBody = await resp.Content.ReadAsStringAsync();
+        _logger.LogDebug("Refresh token response: {StatusCode} - {ResponseBody}", resp.StatusCode, responseBody);
+
         if (!resp.IsSuccessStatusCode) return null;
-        var json = await resp.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<TokenResponse>(json);
+        return JsonSerializer.Deserialize<TokenResponse>(responseBody, _jsonOptions);
     }
 
     public async Task RevokeTokenAsync(string token)
@@ -80,6 +105,10 @@ public class KeycloakClient : IKeycloakClient
             new KeyValuePair<string, string>("client_id", _options.ClientId),
             new KeyValuePair<string, string>("client_secret", _options.ClientSecret),
         });
-        await _http.PostAsync($"{_options.InternalUrl}/realms/{_options.Realm}/protocol/openid-connect/revoke", content);
+
+        var resp = await _http.PostAsync(
+            $"{_options.InternalUrl}/realms/{_options.Realm}/protocol/openid-connect/revoke", content);
+
+        _logger.LogDebug("Token revocation response: {StatusCode}", resp.StatusCode);
     }
 }

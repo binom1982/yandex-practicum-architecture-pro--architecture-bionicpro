@@ -98,6 +98,9 @@ builder.Services.AddCors(o => o.AddPolicy("AllowFrontend", p => p
     .AllowAnyHeader()
     .AllowCredentials())); // важно для куки
 
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information); // или Debug для детальных логов
+
 // ─────────────────────────────────────────────────────
 // Build app
 // ─────────────────────────────────────────────────────

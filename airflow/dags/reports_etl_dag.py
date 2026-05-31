@@ -1,8 +1,9 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook  # или clickhouse-driver
+from clickhouse_driver import Client
 from datetime import datetime, timedelta
+import json
 
 default_args = {
     'owner': 'bionicpro',
@@ -39,26 +40,50 @@ def extract_load(**ctx):
     vitrina_rows = []
     for user_id, report_date, telemetry_json in tel_rows:
         crm = crm_dict.get(user_id, (user_id, 'N/A', 'N/A', 'N/A', 'N/A'))
-        vitrina_rows.append((
-            user_id, report_date, telemetry_json,
-            f'{{"full_name":"{crm[1]}","email":"{crm[2]}","phone":"{crm[3]}","contract_no":"{crm[4]}"}}',
-            exec_date
-        ))
+        vitrina_rows.append({
+            'user_id': user_id,
+            'report_date': report_date,
+            'telemetry_json': telemetry_json,
+            'crm_data': json.dumps({
+                'full_name': crm[1],
+                'email': crm[2],
+                'phone': crm[3],
+                'contract_no': crm[4]
+            }),
+            'etl_date': exec_date
+        })
     
     # 4. Load в ClickHouse OLAP витрину
-    ch = ClickHouseHook(clickhouse_conn_id='clickhouse_olap')
-    ch.run("INSERT INTO reports_db.reports_vitrina VALUES", vitrina_rows)
+    # Используем clickhouse-driver напрямую
+    ch_client = Client(
+        host='clickhouse',
+        port=9000,  # native protocol
+        database='reports_db',
+        user='default',
+        password=''
+    )
     
-    # 5. Обновляем мета-таблицу с последней обработанной датой (для API-проверки)
-    ch.run(f"""
+    # Batch insert с именованными параметрами
+    ch_client.execute("""
+        INSERT INTO reports_db.reports_vitrina 
+        (user_id, report_date, telemetry_json, crm_data, etl_date)
+        VALUES
+    """, vitrina_rows)
+    
+    # 5. Обновляем мета-таблицу с последней обработанной датой
+    ch_client.execute("""
         INSERT INTO reports_db.etl_audit (dag_id, last_processed_date, processed_at)
-        VALUES ('reports_etl_dag', '{exec_date}', now())
-    """)
+        VALUES (%(dag_id)s, %(last_date)s, now())
+    """, [{'dag_id': 'reports_etl_dag', 'last_date': exec_date}])
+    
+    ch_client.disconnect()
+    
+    return {'processed_rows': len(vitrina_rows), 'date': exec_date}
 
 with DAG(
     dag_id='reports_etl_dag',
     default_args=default_args,
-    schedule_interval='0 2 * * *',       # ежедневно в 02:00
+    schedule_interval='0 2 * * *',  # ежедневно в 02:00
     start_date=datetime(2026, 1, 1),
     catchup=False,
     tags=['bionicpro', 'reports', 'etl'],
@@ -67,4 +92,5 @@ with DAG(
     etl_task = PythonOperator(
         task_id='extract_transform_load',
         python_callable=extract_load,
+        provide_context=True,
     )

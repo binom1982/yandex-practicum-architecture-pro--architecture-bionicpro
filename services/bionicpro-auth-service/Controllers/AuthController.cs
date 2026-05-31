@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 
 namespace BionicproAuthService.Controllers;
 
@@ -30,22 +29,23 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    // 🔹 GET /auth/login — инициация PKCE flow (браузерный редирект)
+    // 🔹 GET /auth/login — инициация PKCE flow
     [HttpGet("login")]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public IActionResult LoginInit([FromQuery] string? redirect)
     {
+        _logger.LogInformation("Initiating PKCE login. Redirect: {Redirect}", redirect ?? "default");
+
         var redirectUri = string.IsNullOrEmpty(redirect)
             ? $"{Request.Scheme}://{Request.Host}"
             : redirect;
 
-        // Генерируем PKCE параметры
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
-
-        // Сохраняем code_verifier во временном кеше (5 мин)
         var state = Guid.NewGuid().ToString("N");
+
         HttpContext.Session.SetString($"pkce_{state}", codeVerifier);
+        _logger.LogDebug("PKCE state created: {State}", state);
 
         var keycloakUrl = _keycloak.BuildAuthorizationUrl(
             redirectUri: $"{Request.Scheme}://{Request.Host}/auth/callback",
@@ -53,18 +53,9 @@ public class AuthController : ControllerBase
             codeChallenge: codeChallenge,
             codeChallengeMethod: "S256");
 
+        _logger.LogInformation("Redirecting to Keycloak: {KeycloakUrl}", keycloakUrl);
         return Redirect(keycloakUrl);
     }
-
-    //// 🔹 POST /auth/login — legacy (для совместимости, если нужно)
-    //[HttpPost("login")]
-    //[ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //public async Task<IActionResult> Login([FromBody] AuthRequest request)
-    //{
-    //    // Можно оставить для внутренних сервисов или убрать
-    //    return BadRequest(new { error = "use_get_login_for_browser" });
-    //}
 
     // 🔹 GET /auth/callback — обработка возврата от Keycloak
     [HttpGet("callback")]
@@ -76,76 +67,105 @@ public class AuthController : ControllerBase
         [FromQuery] string? error)
     {
         if (!string.IsNullOrEmpty(error))
+        {
+            _logger.LogWarning("Keycloak returned error: {Error}, Description: {ErrorDescription}",
+                error, HttpContext.Request.Query["error_description"]);
             return BadRequest(new { error, error_description = HttpContext.Request.Query["error_description"] });
+        }
 
         if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+        {
+            _logger.LogWarning("Callback missing required parameters. Code: {CodePresent}, State: {StatePresent}",
+                !string.IsNullOrEmpty(code), !string.IsNullOrEmpty(state));
             return BadRequest(new { error = "missing_code_or_state" });
+        }
 
-        // Восстанавливаем code_verifier
+        _logger.LogDebug("Processing callback. State: {State}, Code prefix: {CodePrefix}",
+            state, code.Substring(0, Math.Min(8, code.Length)));
+
         var codeVerifier = HttpContext.Session.GetString($"pkce_{state}");
         if (string.IsNullOrEmpty(codeVerifier))
+        {
+            _logger.LogWarning("PKCE state not found or expired: {State}", state);
             return BadRequest(new { error = "invalid_state" });
+        }
 
-        // Обмениваем code на токены
         var tokens = await _keycloak.ExchangeCodeForTokensAsync(code, codeVerifier);
         if (tokens == null)
+        {
+            _logger.LogError("Token exchange failed for state: {State}", state);
             return Unauthorized(new { error = "token_exchange_failed" });
+        }
 
-        // Извлекаем sub из access_token
+        _logger.LogDebug("Token exchange successful for state: {State}", state);
+
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(tokens.AccessToken);
         var sub = jwt.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-        if (string.IsNullOrEmpty(sub))
-            return Unauthorized(new { error = "invalid_token" });
 
-        // Создаём сессию
+        if (string.IsNullOrEmpty(sub))
+        {
+            _logger.LogError("Access token missing 'sub' claim");
+            return Unauthorized(new { error = "invalid_token" });
+        }
+
         var session = await _sessionService.CreateSessionAsync(tokens, sub);
         if (session == null)
+        {
+            _logger.LogError("Failed to create session for user: {UserId}", sub);
             return StatusCode(500, new { error = "session_creation_failed" });
+        }
 
-        // Очищаем временный PKCE-стейт
         HttpContext.Session.Remove($"pkce_{state}");
 
-        // Устанавливаем secure cookie
         Response.Cookies.Append(
             _sessionOptions.CookieName,
             session.SessionId,
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = Request.IsHttps, // true в продакшене
+                Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Lax,
                 Expires = session.ExpiresAt,
                 Path = "/"
             });
 
-        // Редирект обратно на фронтенд
+        _logger.LogInformation("Session created for user: {UserId}, SessionId: {SessionId}",
+            sub, session.SessionId);
+
         var targetRedirect = Uri.IsWellFormedUriString(state, UriKind.Absolute)
             ? state
             : $"{Request.Scheme}://{Request.Host}";
+
+        _logger.LogInformation("Redirecting back to frontend: {TargetRedirect}", targetRedirect);
         return Redirect(targetRedirect);
     }
 
-    // 🔹 GET /auth/session — проверка сессии (для фронтенда)
+    // 🔹 GET /auth/session — проверка сессии
     [HttpGet("session")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CheckSession()
     {
         if (!Request.Cookies.TryGetValue(_sessionOptions.CookieName, out var sessionId))
+        {
+            _logger.LogDebug("No session cookie found");
             return Unauthorized();
+        }
 
         var session = await _sessionService.GetSessionAsync(sessionId);
         if (session == null || session.IsExpired)
         {
+            _logger.LogDebug("Session not found or expired: {SessionId}", sessionId);
             Response.Cookies.Delete(_sessionOptions.CookieName);
             return Unauthorized();
         }
 
-        // 🔐 Ротация сессии: перепривязываем токены к новому session_id
+        // Ротация сессии
         var newSession = await _sessionService.RotateSessionAsync(session);
-        if (newSession != null)
+        if (newSession != null && newSession.SessionId != sessionId)
         {
+            _logger.LogDebug("Session rotated: {OldId} → {NewId}", sessionId, newSession.SessionId);
             Response.Cookies.Append(
                 _sessionOptions.CookieName,
                 newSession.SessionId,
@@ -159,12 +179,8 @@ public class AuthController : ControllerBase
                 });
         }
 
-        return Ok(new
-        {
-            authenticated = true,
-            userId = session.UserId,
-            expiresAt = session.ExpiresAt
-        });
+        _logger.LogDebug("Session valid for user: {UserId}", session.UserId);
+        return Ok(new { authenticated = true, userId = session.UserId, expiresAt = session.ExpiresAt });
     }
 
     // 🔹 GET /auth/me — получение данных пользователя
@@ -178,20 +194,30 @@ public class AuthController : ControllerBase
 
         var session = await _sessionService.GetSessionAsync(sessionId);
         if (session == null || session.IsExpired)
+        {
+            Response.Cookies.Delete(_sessionOptions.CookieName);
             return Unauthorized();
+        }
 
-        // Опционально: обновить access_token если он истёк
+        // Обновление access_token при истечении
         if (session.IsAccessTokenExpired)
         {
+            _logger.LogDebug("Access token expired, attempting refresh for user: {UserId}", session.UserId);
             var refreshed = await _keycloak.RefreshAccessTokenAsync(session.RefreshToken);
             if (refreshed != null)
             {
                 session.AccessToken = refreshed.AccessToken;
+                session.AccessTokenExpiresAt = DateTime.UtcNow.AddSeconds(refreshed.ExpiresIn);
                 await _sessionService.UpdateSessionAsync(session);
+                _logger.LogDebug("Access token refreshed successfully");
+            }
+            else
+            {
+                _logger.LogWarning("Failed to refresh access token for user: {UserId}", session.UserId);
+                // Не блокируем запрос — вернём данные с старым токеном если он ещё валиден в Keycloak
             }
         }
 
-        // Извлекаем данные из access_token
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(session.AccessToken);
 
@@ -212,11 +238,19 @@ public class AuthController : ControllerBase
             var session = await _sessionService.GetSessionAsync(sessionId);
             if (session != null)
             {
-                // Отзываем refresh_token в Keycloak (опционально)
-                await _keycloak.RevokeTokenAsync(session.RefreshToken);
+                try
+                {
+                    await _keycloak.RevokeTokenAsync(session.RefreshToken);
+                    _logger.LogDebug("Refresh token revoked for user: {UserId}", session.UserId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to revoke refresh token for user: {UserId}", session.UserId);
+                }
                 await _sessionService.DeleteSessionAsync(sessionId);
             }
             Response.Cookies.Delete(_sessionOptions.CookieName);
+            _logger.LogInformation("User logged out, session deleted: {SessionId}", sessionId);
         }
         return Ok(new { success = true });
     }
@@ -242,66 +276,6 @@ public class AuthController : ControllerBase
             .Replace('+', '-')
             .Replace('/', '_')
             .TrimEnd('=');
-
-    private List<string> ExtractRoles(JwtSecurityToken jwt)
-    {
-        var roles = new List<string>();
-
-        var realmAccessClaim = jwt.Claims.FirstOrDefault(c => c.Type == "realm_access");
-        if (realmAccessClaim != null)
-        {
-            try
-            {
-                var doc = JsonDocument.Parse(realmAccessClaim.Value);
-                if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
-                {
-                    foreach (var role in rolesElement.EnumerateArray())
-                        roles.Add(role.GetString());
-                }
-            }
-            catch { }
-        }
-
-        roles.AddRange(jwt.Claims
-            .Where(c => c.Type == "realm_access.roles")
-            .SelectMany(c => c.Value.Split(','))
-            .Select(r => r.Trim())
-            .Where(r => !string.IsNullOrEmpty(r)));
-
-        var resourceAccessClaim = jwt.Claims.FirstOrDefault(c => c.Type == "resource_access");
-        if (resourceAccessClaim != null)
-        {
-            try
-            {
-                var doc = JsonDocument.Parse(resourceAccessClaim.Value);
-                foreach (var client in doc.RootElement.EnumerateObject())
-                {
-                    if (client.Value.TryGetProperty("roles", out var clientRoles))
-                    {
-                        foreach (var role in clientRoles.EnumerateArray())
-                            roles.Add(role.GetString());
-                    }
-                }
-            }
-            catch { }
-        }
-
-        roles.AddRange(jwt.Claims
-            .Where(c => c.Type is "roles" or "role")
-            .SelectMany(c => c.Value.Split(','))
-            .Select(r => r.Trim())
-            .Where(r => !string.IsNullOrEmpty(r)));
-
-        return roles.Distinct().ToList();
-    }
 }
 
 public record UserInfo(string Sub, string? PreferredUsername, string? Email);
-
-public class LoginResponse
-{
-    public bool Success { get; set; }
-    public string[] Roles { get; set; } = Array.Empty<string>();
-    public string Username { get; set; } = string.Empty;
-    public string? Error { get; set; }
-}

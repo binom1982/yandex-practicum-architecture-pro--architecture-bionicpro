@@ -4,18 +4,26 @@ name: bionicpro
 # YAML-якорь для переиспользования (на корневом уровне)
 # ─────────────────────────────────────────────────────
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.8.1
+  # image: apache/airflow:2.8.1
+  build:
+    context: ./airflow
+    dockerfile: Dockerfile
   environment:
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
-    AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-clickhouse>=0.4.0"  # ← добавить
+    # Postgres connections
+    AIRFLOW_CONN_CRM_DB: 'postgresql://crm_user:crm_pass@crmpostgres:5432/crm_db'
+    AIRFLOW_CONN_TELEMETRY_DB: 'postgresql://tel_user:tel_pass@telemetrypostgres:5432/telemetry_db'
+    # ClickHouse (для справки, если будете использовать SqlOperator в будущем)
+    AIRFLOW_CONN_CLICKHOUSE_OLAP: 'clickhouse+native://default:@clickhouse:9000/reports_db'
+    # AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    # AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    # AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
+    # AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    # _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-clickhouse>=0.4.0"  # ← добавить
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/requirements.txt:/requirements.txt  # ← добавить
+    # - ./airflow/requirements.txt:/requirements.txt  # ← добавить
   depends_on:
     airflow-postgres:
       condition: service_healthy
@@ -90,8 +98,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8080"
+    volumes:
+    - auth-keys:/app/keys  # ← примонтировать volume
     environment:
-      Keycloak__BaseUrl: http://keycloak:8080
+      # 🔹 PublicUrl — для браузера (редиректы, redirect_uri)
+      Keycloak__PublicUrl: http://localhost:8080    
+      # 🔹 InternalUrl — для серверных вызовов к Keycloak
+      Keycloak__InternalUrl: http://keycloak:8080
+
+      Keycloak__CallbackUrl: http://localhost:3000  # Куда Keycloak редиректит после логина
       Keycloak__Realm: reports-realm
       Keycloak__ClientId: reports-api
       Keycloak__ClientSecret: oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq
@@ -201,17 +216,41 @@ services:
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
+    restart: "no"  # ← контейнер должен выполниться один раз и завершиться
     command:
       - -c
       - |
-        airflow db migrate
+        set -e
+        echo "🔄 Initializing Airflow DB..."
+        airflow db init
+        
+        echo "🔗 Adding connections (ignoring if hosts missing)..."
+        airflow connections add 'crm_db' \
+          --conn-type 'postgres' \
+          --conn-host 'crmpostgres' \
+          --conn-port '5432' \
+          --conn-login 'crm_user' \
+          --conn-password 'crm_pass' \
+          --conn-schema 'crm_db' || echo "⚠️ CRM host not available yet"
+          
+        airflow connections add 'telemetry_db' \
+          --conn-type 'postgres' \
+          --conn-host 'telemetrypostgres' \
+          --conn-port '5432' \
+          --conn-login 'tel_user' \
+          --conn-password 'tel_pass' \
+          --conn-schema 'telemetry_db' || echo "⚠️ Telemetry host not available yet"
+          
+        echo "👤 Creating admin user..."
         airflow users create \
           --username admin \
           --password admin \
           --firstname Admin \
           --lastname User \
           --role Admin \
-          --email admin@bionicpro.local
+          --email admin@bionicpro.local || echo "⚠️ Admin already exists"
+          
+        echo "✅ Airflow init finished"
 
   airflow-webserver:
     <<: *airflow-common
@@ -252,3 +291,4 @@ volumes:
   ldap-config:
   clickhouse-data:
   airflow-pg-data:
+  auth-keys: 

@@ -1,4 +1,5 @@
 ﻿using BionicproAuthService.Models;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
@@ -95,20 +96,28 @@ public class InMemorySessionService : IAuthSessionService
         return Task.CompletedTask;
     }
 
-    private string Encrypt(string plain)
+    // 🔹 Если шифруете в стандартный Base64:
+    private string Encrypt(string plainText)
     {
-        using var encryptor = _aes.CreateEncryptor();
-        var bytes = Encoding.UTF8.GetBytes(plain);
-        var encrypted = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
-        return Convert.ToBase64String(encrypted);
+        var bytes = Encoding.UTF8.GetBytes(plainText);
+        var encrypted = _aes.Encrypt(bytes, _key, _iv);
+        return Convert.ToBase64String(encrypted);  // ← стандартный Base64
     }
 
     private string Decrypt(string encrypted)
     {
-        using var decryptor = _aes.CreateDecryptor();
-        var bytes = Convert.FromBase64String(encrypted);
-        var decrypted = decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
-        return Encoding.UTF8.GetString(decrypted);
+        try
+        {
+            var bytes = Convert.FromBase64String(encrypted);  // ← должно соответствовать Encrypt
+            var decrypted = _aes.Decrypt(bytes, _key, _iv);
+            return Encoding.UTF8.GetString(decrypted);
+        }
+        catch (FormatException ex)
+        {
+            _logger.LogError(ex, "Failed to decrypt: invalid Base64 input='{Input}'",
+                encrypted?.Substring(0, Math.Min(20, encrypted?.Length ?? 0)));
+            return null;
+        }
     }
 
     private AuthSession DecryptSession(AuthSession s) => new()
