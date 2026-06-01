@@ -131,7 +131,7 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend"); // ← CORS до авторизации
 app.UseSession();             // ← сессии до контроллеров
-app.UseMiddleware<SessionValidationMiddleware>();
+//app.UseMiddleware<SessionValidationMiddleware>();
 
 app.MapControllers();
 

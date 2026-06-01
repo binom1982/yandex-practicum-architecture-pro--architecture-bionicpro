@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { initiateLogin, checkSession, getUserInfo, logout } from './services/auth';
+import { initiateLogin, checkSession, getUserInfo, logout, UserInfo } from './services/auth';
 import ReportPage from './components/ReportPage';
-
-interface UserInfo {
-  email: string;
-  roles: string[];
-}
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,7 +35,7 @@ const App: React.FC = () => {
     );
   }
 
-  const hasProtheticRole = userInfo?.roles.includes('prothetic_user');
+  const hasProtheticRole = userInfo?.roles?.includes('prothetic_user') ?? false;
 
   return (
     <div className="App">
@@ -54,7 +49,7 @@ const App: React.FC = () => {
           Выйти
         </button>
       </header>
-      {hasProtheticRole && <ReportPage userId={userInfo!.email} />}
+      {hasProtheticRole && userInfo?.email && <ReportPage userId={userInfo.email} />}
     </div>
   );
 };

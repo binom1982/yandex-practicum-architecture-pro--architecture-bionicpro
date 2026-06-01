@@ -72,10 +72,11 @@ public class InMemorySessionService : IAuthSessionService
             ExpiresAt = now.AddMinutes(_sessionOptions.SessionLifetimeMinutes)
         };
 
-        _sessions[session.SessionId] = session;
-        _logger.LogDebug("Session created: {SessionId}, User: {UserId}, Total sessions: {Count}",
-            session.SessionId, userId, _sessions.Count);
+        // 🔹 НОВОЕ: Лог ключа в "сыром" виде
+        _logger.LogDebug("Adding session to dictionary. Key (raw): '{Key}', Length: {Length}",
+            session.SessionId, session.SessionId.Length);
 
+        _sessions[session.SessionId] = session;
         return Task.FromResult<AuthSession?>(session);
     }
 
@@ -85,36 +86,29 @@ public class InMemorySessionService : IAuthSessionService
 
         if (!_sessions.TryGetValue(sessionId, out var s))
         {
-            // 🔹 НОВОЕ: Лог ключей для отладки (только в dev!)
-            _logger.LogDebug("Available session keys: {Keys}",
-                string.Join(", ", _sessions.Keys.Take(5))); // показываем первые 5
-
             _logger.LogWarning("Session NOT FOUND in dictionary. Available: {Count}", _sessions.Count);
             return null;
         }
 
         if (s.IsExpired)
         {
-            _logger.LogWarning("Session expired: {SessionId}, ExpiredAt: {ExpiresAt}",
-                sessionId, s.ExpiresAt);
+            _logger.LogWarning("Session expired: {SessionId}", sessionId);
             return null;
         }
 
         try
         {
-            var decrypted = DecryptSession(s);
-            _logger.LogDebug("Session decrypted successfully: {SessionId}", sessionId);
-            return decrypted;
+            return DecryptSession(s);
         }
         catch (FormatException ex)
         {
-            _logger.LogError(ex, "Failed to decrypt session {SessionId}. AccessToken prefix: {TokenPrefix}",
-                sessionId, s.AccessToken?.Substring(0, Math.Min(20, s.AccessToken?.Length ?? 0)));
+            // 🔹 НОВОЕ: Лог + возврат null (кука будет удалена в контроллере)
+            _logger.LogWarning(ex, "Decryption failed for session {SessionId}. Token may be from old key or unencrypted. Deleting cookie.", sessionId);
             return null;
         }
         catch (CryptographicException ex)
         {
-            _logger.LogError(ex, "Cryptographic error decrypting session {SessionId}", sessionId);
+            _logger.LogWarning(ex, "Cryptographic error for session {SessionId}. Deleting cookie.", sessionId);
             return null;
         }
     }
@@ -164,6 +158,14 @@ public class InMemorySessionService : IAuthSessionService
     // 🔹 Дешифрование (стандартный Base64)
     private string Decrypt(string encrypted)
     {
+        // 🔹 Если токен начинается с "eyJ" — это сырой JWT, а не зашифрованные данные
+        // (возможно, сессия создана до включения шифрования)
+        if (!string.IsNullOrEmpty(encrypted) && encrypted.StartsWith("eyJ"))
+        {
+            _logger.LogWarning("Token appears to be unencrypted JWT. Returning as-is for backward compatibility.");
+            return encrypted; // ← возвращаем как есть, чтобы не ломать старые сессии
+        }
+
         try
         {
             using var decryptor = _aes.CreateDecryptor();

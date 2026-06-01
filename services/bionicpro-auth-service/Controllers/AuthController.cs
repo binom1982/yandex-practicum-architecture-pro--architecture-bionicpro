@@ -161,14 +161,18 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CheckSession()
     {
+        // 🔹 НОВОЕ: Логируем ВСЕ куки с их значениями (только для dev!)
+        _logger.LogDebug("All cookies received: {Cookies}",
+            string.Join("; ", Request.Cookies.Select(c => $"{c.Key}={c.Value?.Substring(0, Math.Min(8, c.Value.Length))}...")));
+
         if (!Request.Cookies.TryGetValue(_sessionOptions.CookieName, out var sessionId))
         {
-            _logger.LogWarning("No session cookie found. Available cookies: {Cookies}",
-                string.Join(", ", Request.Cookies.Keys));
+            _logger.LogWarning("Cookie '{CookieName}' NOT found. Available: {Available}",
+                _sessionOptions.CookieName, string.Join(", ", Request.Cookies.Keys));
             return Unauthorized();
         }
 
-        _logger.LogDebug("Session cookie received: {SessionId}", sessionId);
+        _logger.LogDebug("Cookie '{CookieName}' value: '{SessionId}'", _sessionOptions.CookieName, sessionId);
 
         // 🔹 НОВОЕ: Лог для отладки — сколько сессий в словаре
         if (_sessionService is InMemorySessionService inMemory)
