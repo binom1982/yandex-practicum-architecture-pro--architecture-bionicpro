@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace BionicproAuthService.Controllers;
 
@@ -247,10 +248,56 @@ public class AuthController : ControllerBase
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(session.AccessToken);
 
+        // 🔹 НОВОЕ: Извлекаем роли из JWT
+        // Keycloak хранит роли в claim "realm_access.roles" (realm roles) 
+        // или "resource_access.{client}.roles" (client roles)
+        var roles = new List<string>();
+
+        // 1. Realm roles
+        var realmAccessClaim = jwt.Claims.FirstOrDefault(c => c.Type == "realm_access")?.Value;
+        if (!string.IsNullOrEmpty(realmAccessClaim))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(realmAccessClaim);
+                if (doc.RootElement.TryGetProperty("roles", out var rolesElem))
+                {
+                    foreach (var role in rolesElem.EnumerateArray())
+                        roles.Add(role.GetString() ?? string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse realm_access claim");
+            }
+        }
+
+        // 2. Client roles (для клиента reports-api)
+        var resourceAccessClaim = jwt.Claims.FirstOrDefault(c => c.Type == "resource_access")?.Value;
+        if (!string.IsNullOrEmpty(resourceAccessClaim))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(resourceAccessClaim);
+                if (doc.RootElement.TryGetProperty("reports-api", out var clientElem) &&
+                    clientElem.TryGetProperty("roles", out var clientRoles))
+                {
+                    foreach (var role in clientRoles.EnumerateArray())
+                        roles.Add(role.GetString() ?? string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse resource_access claim");
+            }
+        }
+
+        // 🔹 Возвращаем роли в ответе
         return Ok(new UserInfo(
             Sub: session.UserId,
             PreferredUsername: jwt.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value,
-            Email: jwt.Claims.FirstOrDefault(c => c.Type == "email")?.Value
+            Email: jwt.Claims.FirstOrDefault(c => c.Type == "email")?.Value,
+            Roles: roles.ToArray()  // ← новое поле
         ));
     }
 
@@ -304,4 +351,4 @@ public class AuthController : ControllerBase
             .TrimEnd('=');
 }
 
-public record UserInfo(string Sub, string? PreferredUsername, string? Email);
+public record UserInfo(string Sub, string? PreferredUsername, string? Email, string[]? Roles);
