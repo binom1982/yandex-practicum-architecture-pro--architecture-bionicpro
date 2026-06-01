@@ -49,7 +49,7 @@ const App: React.FC = () => {
           Выйти
         </button>
       </header>
-      {hasProtheticRole && userInfo?.email && <ReportPage userId={userInfo.email} />}
+      {hasProtheticRole && userInfo?.email && <ReportPage userId={userInfo.sub} />}
     </div>
   );
 };

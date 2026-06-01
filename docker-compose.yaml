@@ -290,11 +290,14 @@ services:
     ports:
       - "5001:8080"
     environment:
-      CLICKHOUSE_CONN: "Host=clickhouse;Port=8123;Database=reports_db;Username=default;Password="
-      AUTH_SERVICE_URL: "http://bionicpro-auth:8080"
-      SESSION_COOKIE_NAME: "session_id"
+      ASPNETCORE_URLS: "http://+:8080"  # ← важно для Docker
+      ClickHouse__ConnectionString: "Host=clickhouse;Port=8123;Database=reports_db;Username=default;Password="
+      AUTH_SERVICE_URL: "http://bionicpro-auth:8080"  # 🔹 Должно быть внутреннее имя сервиса
+      SESSION_COOKIE_NAME: "bionicpro_session"  # 🔹 Должно совпадать с auth-сервисом
     depends_on:
       clickhouse:
+        condition: service_healthy
+      bionicpro-auth:  # 🔹 Зависимость от auth-сервиса
         condition: service_healthy
 
 # ─────────────────────────────────────────────────────

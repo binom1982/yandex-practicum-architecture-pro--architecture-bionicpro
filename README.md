@@ -105,6 +105,14 @@ curl -s -X POST http://localhost:8000/auth/login \
 
 Это демонстрирует корректность настройки realm-ролей и protocolMappers для проброса ролей в JWT.
 
+### Тестирование сервиса отчетов
+
+```
+docker-compose up -d --build --force-recreate bionicpro-reports
+
+docker-compose up -d --build --force-recreate frontend
+```
+
 ### Таблица доступов к сервисам
 
 | **Сервис**                   | **URL (Browser / Client)**                     | **Логин / Пароль**            | **Описание / Назначение**                                                                                  |
