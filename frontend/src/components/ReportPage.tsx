@@ -13,9 +13,10 @@ const ReportPage: React.FC<Props> = ({ userId }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${process.env.REACT_APP_REPORTS_URL}/reports?user_id=${userId}`, {
-        credentials: 'include'
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_REPORTS_URL}/reports?user_id=${userId}`,
+        { credentials: 'include' }
+      );
 
       if (!response.ok) {
         // 🔹 Читаем сообщение об ошибке из ответа сервера
@@ -34,11 +35,13 @@ const ReportPage: React.FC<Props> = ({ userId }) => {
         throw new Error(serverMessage);
       }
 
-      const blob = await response.blob();
+      // 🔹 Получаем JSON и скачиваем как файл
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `report-${userId}-${Date.now()}.pdf`;
+      a.download = `report-${userId}-${Date.now()}.json`;  // 🔹 Расширение .json
       document.body.appendChild(a);
       a.click();
       a.remove();
