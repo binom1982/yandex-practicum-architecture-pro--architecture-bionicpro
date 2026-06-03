@@ -1,0 +1,35 @@
+[2026-06-03T11:21:40.060+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: reports_etl_dag.extract_transform_load manual__2026-06-03T11:11:25.409236+00:00 [queued]>
+[2026-06-03T11:21:40.070+0000] {taskinstance.py:1956} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: reports_etl_dag.extract_transform_load manual__2026-06-03T11:11:25.409236+00:00 [queued]>
+[2026-06-03T11:21:40.071+0000] {taskinstance.py:2170} INFO - Starting attempt 3 of 3
+[2026-06-03T11:21:40.090+0000] {taskinstance.py:2191} INFO - Executing <Task(PythonOperator): extract_transform_load> on 2026-06-03 11:11:25.409236+00:00
+[2026-06-03T11:21:40.100+0000] {standard_task_runner.py:60} INFO - Started process 28287 to run task
+[2026-06-03T11:21:40.105+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'reports_etl_dag', 'extract_transform_load', 'manual__2026-06-03T11:11:25.409236+00:00', '--job-id', '13', '--raw', '--subdir', 'DAGS_FOLDER/reports_etl_dag.py', '--cfg-path', '/tmp/tmpa9v53g8p']
+[2026-06-03T11:21:40.107+0000] {standard_task_runner.py:88} INFO - Job 13: Subtask extract_transform_load
+[2026-06-03T11:21:40.206+0000] {task_command.py:423} INFO - Running <TaskInstance: reports_etl_dag.extract_transform_load manual__2026-06-03T11:11:25.409236+00:00 [running]> on host c889df2af870
+[2026-06-03T11:21:40.340+0000] {taskinstance.py:2480} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='bionicpro' AIRFLOW_CTX_DAG_ID='reports_etl_dag' AIRFLOW_CTX_TASK_ID='extract_transform_load' AIRFLOW_CTX_EXECUTION_DATE='2026-06-03T11:11:25.409236+00:00' AIRFLOW_CTX_TRY_NUMBER='3' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-06-03T11:11:25.409236+00:00'
+[2026-06-03T11:21:40.352+0000] {base.py:83} INFO - Using connection ID 'crm_db' for task execution.
+[2026-06-03T11:21:43.715+0000] {taskinstance.py:2698} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/taskinstance.py", line 433, in _execute_task
+    result = execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 199, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 216, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/reports_etl_dag.py", line 19, in extract_load
+    crm_rows = crm.get_records("""
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/common/sql/hooks/sql.py", line 261, in get_records
+    return self.run(sql=sql, parameters=parameters, handler=fetch_all_handler)
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/common/sql/hooks/sql.py", line 391, in run
+    with closing(self.get_conn()) as conn:
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/providers/postgres/hooks/postgres.py", line 158, in get_conn
+    self.conn = psycopg2.connect(**conn_args)
+  File "/home/airflow/.local/lib/python3.8/site-packages/psycopg2/__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not translate host name "crmpostgres" to address: Name or service not known
+
+[2026-06-03T11:21:43.749+0000] {taskinstance.py:1138} INFO - Marking task as FAILED. dag_id=reports_etl_dag, task_id=extract_transform_load, execution_date=20260603T111125, start_date=20260603T112140, end_date=20260603T112143
+[2026-06-03T11:21:43.787+0000] {standard_task_runner.py:107} ERROR - Failed to execute job 13 for task extract_transform_load (could not translate host name "crmpostgres" to address: Name or service not known
+; 28287)
+[2026-06-03T11:21:43.834+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 1
+[2026-06-03T11:21:43.907+0000] {taskinstance.py:3280} INFO - 0 downstream tasks scheduled from follow-on schedule check

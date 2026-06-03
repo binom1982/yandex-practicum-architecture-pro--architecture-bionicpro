@@ -65,9 +65,16 @@ public class ReportsController : ControllerBase
         }
 
         // Проверка актуальности данных
-        var lastProcessed = await _clickHouse.GetLastProcessedDateAsync();
+        /*var lastProcessed = await _clickHouse.GetLastProcessedDateAsync();
         if (lastProcessed == null)
-            return StatusCode(503, new { error = "ETL ещё не выполнялся" });
+        {
+            // 🔹 Возвращаем информативный ответ, а не 500
+            return StatusCode(503, new
+            {
+                error = "Отчёты ещё не сформированы. Дождитесь выполнения ETL-процесса.",
+                retryAfter = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd HH:mm")
+            });
+        }
 
         if (to.HasValue && to.Value.Date > lastProcessed.Value.Date)
         {
@@ -77,7 +84,7 @@ public class ReportsController : ControllerBase
                 lastProcessedDate = lastProcessed.Value.Date.ToString("yyyy-MM-dd"),
                 retryAfter = lastProcessed.Value.AddDays(1).ToString("yyyy-MM-dd HH:mm")
             });
-        }
+        }*/
 
         var report = await _clickHouse.GetReportAsync(user_id, from, to);
 

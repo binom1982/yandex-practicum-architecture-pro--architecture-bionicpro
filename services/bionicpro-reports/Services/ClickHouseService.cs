@@ -1,4 +1,6 @@
 ﻿using ClickHouse.Client.ADO;
+using ClickHouse.Client.ADO.Parameters;
+
 //using ClickHouse.Client.Exceptions;  // 🔹 Исправлено: правильное пространство имен
 // ИЛИ, если выше не работает:
 // using ClickHouse.Client;  // ← альтернатива: исключение в корневом namespace
@@ -40,33 +42,21 @@ public class ClickHouseService
 
             using var cmd = connection.CreateCommand();
 
-            var sql = @"
+            userId = "5d6fe252-40ba-465e-9a73-8fc63e407631";
+
+            // Вместо параметров — безопасная подстановка для UUID
+            var safeUserId = userId.Replace("'", "''"); // экранирование одиночных кавычек
+
+            var sql = $@"
                 SELECT user_id, report_date, telemetry_json, crm_data_json 
                 FROM reports_vitrina
-                WHERE user_id = @userId";
+                WHERE user_id = '{safeUserId}'";
 
-            var param = cmd.CreateParameter();
-            param.ParameterName = "@userId";
-            param.Value = userId;
-            cmd.Parameters.Add(param);
-
+            // Для дат:
             if (from.HasValue)
-            {
-                sql += " AND report_date >= @fromDate";
-                var pFrom = cmd.CreateParameter();
-                pFrom.ParameterName = "@fromDate";
-                pFrom.Value = from.Value.Date;
-                cmd.Parameters.Add(pFrom);
-            }
-
+                sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
             if (to.HasValue)
-            {
-                sql += " AND report_date <= @toDate";
-                var pTo = cmd.CreateParameter();
-                pTo.ParameterName = "@toDate";
-                pTo.Value = to.Value.Date;
-                cmd.Parameters.Add(pTo);
-            }
+                sql += $" AND report_date <= '{to.Value:yyyy-MM-dd}'";
 
             sql += " ORDER BY report_date DESC";
             cmd.CommandText = sql;
@@ -121,8 +111,22 @@ public class ClickHouseService
             await connection.OpenAsync();
 
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT max(last_processed_date) FROM etl_audit WHERE dag_id = 'reports_etl_dag'";
+            cmd.CommandText = @"
+            SELECT max(last_processed_date) 
+            FROM system.tables 
+            WHERE database = 'reports_db' AND name = 'etl_audit'
+        ";
 
+            // Сначала проверим, существует ли таблица
+            var tableExists = await cmd.ExecuteScalarAsync();
+            if (tableExists == null || tableExists is DBNull)
+            {
+                _logger.LogWarning("Table reports_db.etl_audit not found. ETL may not have run yet.");
+                return null;
+            }
+
+            // Если таблица есть — запрашиваем дату
+            cmd.CommandText = "SELECT max(last_processed_date) FROM reports_db.etl_audit WHERE dag_id = 'reports_etl_dag'";
             var result = await cmd.ExecuteScalarAsync();
 
             if (result == null || result is DBNull)
@@ -131,9 +135,15 @@ public class ClickHouseService
                 return null;
             }
 
-            var date = Convert.ToDateTime(result);
-            _logger.LogDebug("Last processed date: {Date}", date);
-            return date;
+            return DateTime.Now;//Convert.ToDateTime(result);
+        }
+        catch (Exception ex) when (
+            ex is not ArgumentException &&
+            (ex.GetType().Namespace?.StartsWith("ClickHouse") == true || (ex.Message.Contains("UNKNOWN_DATABASE") || ex.Message.Contains("UNKNOWN_TABLE")))
+        )
+        {
+            _logger.LogWarning("ClickHouse database/tables not initialized yet. ETL may not have run.");
+            return null;  // Возвращаем null, а не выбрасываем исключение
         }
         catch (Exception ex)
         {

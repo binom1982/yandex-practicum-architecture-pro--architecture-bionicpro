@@ -18,7 +18,20 @@ const ReportPage: React.FC<Props> = ({ userId }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate report');
+        // 🔹 Читаем сообщение об ошибке из ответа сервера
+        let serverMessage = 'Failed to generate report';
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) {
+            serverMessage = errorData.error;
+          }
+          if (errorData?.retryAfter) {
+            serverMessage += ` (повторите после ${errorData.retryAfter})`;
+          }
+        } catch {
+          // Если ответ не JSON — оставляем дефолтное сообщение
+        }
+        throw new Error(serverMessage);
       }
 
       const blob = await response.blob();

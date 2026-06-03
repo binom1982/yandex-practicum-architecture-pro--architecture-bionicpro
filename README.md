@@ -111,6 +111,11 @@ curl -s -X POST http://localhost:8000/auth/login \
 docker-compose up -d --build --force-recreate bionicpro-reports
 
 docker-compose up -d --build --force-recreate frontend
+
+
+# подключение к clickhouse-client
+docker-compose exec clickhouse clickhouse-client
+SELECT * FROM reports_db.reports_vitrina LIMIT 5;
 ```
 
 ### Таблица доступов к сервисам
