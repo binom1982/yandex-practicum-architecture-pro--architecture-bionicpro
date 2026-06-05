@@ -118,6 +118,12 @@ docker-compose exec clickhouse clickhouse-client
 SELECT * FROM reports_db.reports_vitrina LIMIT 5;
 ```
 
+### Хранилище S3
+
+```
+docker-compose up -d --build --force-recreate frontend
+```
+
 ### Таблица доступов к сервисам
 
 | **Сервис**                   | **URL (Browser / Client)**                     | **Логин / Пароль**            | **Описание / Назначение**                                                                                  |

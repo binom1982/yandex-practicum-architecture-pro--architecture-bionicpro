@@ -1,3 +1,4 @@
+using Amazon.S3;
 using bionicpro_reports.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,18 @@ builder.Configuration.AddInMemoryCollection(new[]
     new KeyValuePair<string, string>("AuthServiceUrl", "http://bionicpro-auth:8080"),
     new KeyValuePair<string, string>("SessionCookieName", "bionicpro_session"),
 });
+
+var s3Config = new AmazonS3Config
+{
+    ServiceURL = builder.Configuration["S3__Endpoint"] ?? "http://minio:9000",
+    ForcePathStyle = true // 🔹 Критично для MinIO! (иначе будет искать http://reports.minio:9000)
+};
+
+builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(
+    builder.Configuration["S3__AccessKey"] ?? "minioadmin",
+    builder.Configuration["S3__SecretKey"] ?? "minioadmin",
+    s3Config
+));
 
 var app = builder.Build();
 
