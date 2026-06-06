@@ -4,6 +4,8 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from clickhouse_driver import Client
 from datetime import datetime, timedelta
 import json
+import boto3  # 🔹 ДОБАВЛЕНО: SDK для работы с S3
+from botocore.client import Config  # 🔹 ДОБАВЛЕНО: Конфигурация для подписи S3v4
 
 default_args = {
     'owner': 'bionicpro',
@@ -54,16 +56,14 @@ def extract_load(**ctx):
         })
     
     # 4. Load в ClickHouse OLAP витрину
-    # Используем clickhouse-driver напрямую
     ch_client = Client(
         host='clickhouse',
-        port=9000,  # native protocol
+        port=9000,
         database='reports_db',
         user='default',
         password=''
     )
     
-    # Batch insert с именованными параметрами
     ch_client.execute("""
         INSERT INTO reports_db.reports_vitrina 
         (user_id, report_date, telemetry_json, crm_data, etl_date)
@@ -80,6 +80,53 @@ def extract_load(**ctx):
     
     return {'processed_rows': len(vitrina_rows), 'date': exec_date}
 
+
+# 🔹 ДОБАВЛЕНО: Функция для инвалидации кэша в MinIO (S3)
+def invalidate_s3_cache(**ctx):
+    """
+    Очищает бакет 'reports' в MinIO.
+    При следующем запросе пользователя API-сервис не найдёт файл в S3, 
+    сделает свежий запрос в ClickHouse и положит в S3 актуальный отчёт.
+    """
+    s3_client = boto3.client(
+        's3',
+        endpoint_url='http://minio:9000',
+        aws_access_key_id='minioadmin',
+        aws_secret_access_key='minioadmin',
+        config=Config(signature_version='s3v4'),
+        region_name='us-east-1'
+    )
+    
+    bucket_name = 'reports'
+    
+    try:
+        # Пагинатор для получения всех объектов (если их больше 1000)
+        paginator = s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=bucket_name)
+        
+        delete_list = []
+        for page in pages:
+            if 'Contents' in page:
+                for obj in page['Contents']:
+                    delete_list.append({'Key': obj['Key']})
+        
+        if delete_list:
+            # S3 позволяет удалять до 1000 объектов за один запрос
+            for i in range(0, len(delete_list), 1000):
+                batch = delete_list[i:i+1000]
+                s3_client.delete_objects(
+                    Bucket=bucket_name,
+                    Delete={'Objects': batch}
+                )
+            print(f"✅ Успешно удалено {len(delete_list)} объектов из бакета '{bucket_name}'")
+        else:
+            print(f"ℹ️ Бакет '{bucket_name}' уже пуст")
+            
+    except Exception as e:
+        print(f"❌ Ошибка при очистке S3: {e}")
+        raise e
+
+
 with DAG(
     dag_id='reports_etl_dag',
     default_args=default_args,
@@ -94,3 +141,13 @@ with DAG(
         python_callable=extract_load,
         provide_context=True,
     )
+
+    # 🔹 ДОБАВЛЕНО: Таска очистки кэша
+    invalidate_cache_task = PythonOperator(
+        task_id='invalidate_s3_cache',
+        python_callable=invalidate_s3_cache,
+        provide_context=True,
+    )
+    
+    # 🔹 ДОБАВЛЕНО: Настройка порядка выполнения (ETL -> Очистка кэша)
+    etl_task >> invalidate_cache_task

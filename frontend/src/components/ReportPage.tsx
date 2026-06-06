@@ -13,6 +13,7 @@ const ReportPage: React.FC<Props> = ({ userId }) => {
       setLoading(true);
       setError(null);
 
+      // 1. Запрашиваем ссылку на отчёт у API (с передачей сессионной cookie)
       const response = await fetch(
         `${process.env.REACT_APP_REPORTS_URL}/reports?user_id=${userId}`,
         { credentials: 'include' }
@@ -35,17 +36,37 @@ const ReportPage: React.FC<Props> = ({ userId }) => {
         throw new Error(serverMessage);
       }
 
-      // 🔹 Получаем JSON и скачиваем как файл
+      // 🔹 ИЗМЕНЕНО: Получаем JSON с URL на CDN вместо сырых данных
       const data = await response.json();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
+      const cdnUrl = data.url;
+
+      if (!cdnUrl) {
+        throw new Error('API не вернул ссылку на отчёт');
+      }
+
+      // 🔹 ИЗМЕНЕНО: Скачиваем файл напрямую из CDN
+      // Используем fetch для получения Blob, чтобы браузер гарантированно скачал файл,
+      // а не просто отобразил JSON текст в новой вкладке.
+      // Запрос к CDN идет без credentials, так как Nginx отдает файлы анонимно.
+      const fileResponse = await fetch(cdnUrl);
+      if (!fileResponse.ok) {
+        throw new Error(`Ошибка скачивания из CDN: ${fileResponse.status}`);
+      }
+
+      const blob = await fileResponse.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `report-${userId}-${Date.now()}.json`;  // 🔹 Расширение .json
+      a.href = blobUrl;
+      
+      // Берём имя файла из URL CDN (обрезаем query-параметры типа ?v=123) или генерируем дефолтное
+      const urlFileName = cdnUrl.split('/').pop()?.split('?')[0];
+      a.download = urlFileName || `report-${userId}.json`;
+      
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(blobUrl);
+
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Ошибка генерации';
       setError(message);
