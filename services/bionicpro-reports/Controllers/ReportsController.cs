@@ -15,14 +15,14 @@ public class ReportsController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _config;
     private readonly ILogger<ReportsController> _logger;
-    private readonly IAmazonS3 _s3Client; // 🔹 ДОБАВЛЕНО: S3 Client
+    private readonly IAmazonS3 _s3Client;
 
     public ReportsController(
         ClickHouseService clickHouse,
         IHttpClientFactory httpClientFactory,
         IConfiguration config,
         ILogger<ReportsController> logger,
-        IAmazonS3 s3Client) // 🔹 ДОБАВЛЕНО в конструктор
+        IAmazonS3 s3Client)
     {
         _clickHouse = clickHouse;
         _httpClientFactory = httpClientFactory;
@@ -33,11 +33,11 @@ public class ReportsController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetReport(
-        [FromQuery] string user_id,  // ← должен быть UUID (sub), а не email
+        [FromQuery] string user_id,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        // Валидация сессии через вызов к auth-сервису
+        // Валидация сессии
         if (!Request.Cookies.TryGetValue(_config["SessionCookieName"] ?? "bionicpro_session", out var sessionId))
         {
             _logger.LogWarning("No session cookie found");
@@ -58,19 +58,17 @@ public class ReportsController : ControllerBase
         }
 
         var userInfo = await authResponse.Content.ReadFromJsonAsync<JsonElement>();
-        var currentUserId = userInfo.GetProperty("sub").GetString();  // ← UUID
-        var userEmail = userInfo.GetProperty("email").GetString();     // ← email (опционально)
+        var currentUserId = userInfo.GetProperty("sub").GetString();
+        var userEmail = userInfo.GetProperty("email").GetString();
 
-        // 🔹 Проверка: сравниваем sub (UUID) с user_id из запроса
         if (string.IsNullOrEmpty(currentUserId) || currentUserId != user_id)
         {
             _logger.LogWarning("User {CurrentUserId} tried to access reports for {RequestedUserId}",
                 currentUserId, user_id);
-            // ✅ Исправлено: возвращаем 403 без имени схемы
             return StatusCode(403, new { error = "Доступ только к собственным отчётам" });
         }
 
-        // 🔹 ИЗМЕНЕНО: Формирование ключа S3 и URL для CDN
+        // Формирование ключа S3
         string fromStr = from?.ToString("yyyy-MM-dd") ?? "start";
         string toStr = to?.ToString("yyyy-MM-dd") ?? "end";
         string s3Key = $"{user_id}/report_{fromStr}_{toStr}.json";
@@ -79,48 +77,38 @@ public class ReportsController : ControllerBase
         string cdnBaseUrl = _config["CDN__BaseUrl"] ?? "http://localhost:8888";
         string cdnUrl = $"{cdnBaseUrl}/reports/{s3Key}";
 
-        // 🔹 ИЗМЕНЕНО: Проверка наличия отчета в S3 (Cache-Aside)
+        // Проверка наличия в S3
         bool reportExists = await S3ObjectExistsAsync(bucketName, s3Key);
 
         if (!reportExists)
         {
             _logger.LogInformation("Report not found in S3, generating from ClickHouse...");
 
-            // Проверка актуальности данных
-            /*var lastProcessed = await _clickHouse.GetLastProcessedDateAsync();
-            if (lastProcessed == null)
-            {
-                // 🔹 Возвращаем информативный ответ, а не 500
-                return StatusCode(503, new
-                {
-                    error = "Отчёты ещё не сформированы. Дождитесь выполнения ETL-процесса.",
-                    retryAfter = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd HH:mm")
-                });
-            }
-
-            if (to.HasValue && to.Value.Date > lastProcessed.Value.Date)
-            {
-                return BadRequest(new
-                {
-                    error = "Запрошенный период ещё не обработан ETL",
-                    lastProcessedDate = lastProcessed.Value.Date.ToString("yyyy-MM-dd"),
-                    retryAfter = lastProcessed.Value.AddDays(1).ToString("yyyy-MM-dd HH:mm")
-                });
-            }*/
-
             var report = await _clickHouse.GetReportAsync(user_id, from, to);
 
             if (report.Count == 0)
                 return NotFound(new { message = "Нет данных за указанный период" });
 
+            // 🔹 [CDC] Формирование ответа: адаптивная структура под новую/старую витрину
             var reportData = new
             {
                 userId = user_id,
                 period = new { from = fromStr, to = toStr },
-                rows = report
+                // 🔹 [CDC] Если есть новые поля — используем их, иначе — старые
+                rows = report.Select(r => new
+                {
+                    // Новые поля (CDC)
+                    client_id = r.UserId,
+                    report_date = r.ReportDate,
+                    client_name = r.ClientName,
+                    total_steps = r.TotalSteps,
+                    avg_battery = r.AvgBattery,
+                    // Старые поля (LEGACY, для обратной совместимости)
+                    telemetry = r.Telemetry,
+                    crm_data = r.CrmData
+                }).ToList()
             };
 
-            // 🔹 ИЗМЕНЕНО: Загрузка отчета в S3
             var jsonContent = JsonSerializer.Serialize(reportData);
             var putRequest = new PutObjectRequest
             {
@@ -146,7 +134,6 @@ public class ReportsController : ControllerBase
             _logger.LogInformation("Report found in S3, returning CDN link.");
         }
 
-        // 🔹 ИЗМЕНЕНО: Возвращаем ссылку на CDN вместо сырых данных
         return Ok(new
         {
             url = cdnUrl,
@@ -154,7 +141,6 @@ public class ReportsController : ControllerBase
         });
     }
 
-    // 🔹 ДОБАВЛЕНО: Вспомогательный метод для проверки существования объекта в S3
     private async Task<bool> S3ObjectExistsAsync(string bucketName, string key)
     {
         try

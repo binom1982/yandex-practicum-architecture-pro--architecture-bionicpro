@@ -350,6 +350,42 @@ services:
     depends_on: [minio]
 
 
+# ---------------------------------------------------------------
+# Kafka Connect + Debezium (Задание 4)
+# ---------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    ports: ["9092:9092"]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports: ["8085:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on: [kafka]
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.5.0
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_PLUGIN_PATH: /usr/share/java,/connectors
+    volumes:
+      - ./debezium:/connectors/debezium-connector-postgres
+    ports: ["8083:8083"]
+    depends_on: [kafka]
+
 # ─────────────────────────────────────────────────────
 # Volumes
 # ─────────────────────────────────────────────────────

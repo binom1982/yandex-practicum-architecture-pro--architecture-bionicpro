@@ -128,7 +128,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCors("AllowFrontend"); // ← CORS до авторизации
 app.UseSession();             // ← сессии до контроллеров
 //app.UseMiddleware<SessionValidationMiddleware>();

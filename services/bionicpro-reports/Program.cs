@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")  // ← разрешаем фронтенд
+        policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000") // ← оба варианта  // ← разрешаем фронтенд
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();  // ← важно для отправки кук
@@ -71,7 +71,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 
 // 🔹 НОВОЕ: Порядок важен! CORS до Auth/Authorization
@@ -81,5 +81,26 @@ app.UseCors("AllowFrontend");  // ← должно быть ДО UseAuthenticati
 //app.UseAuthorization();
 
 app.MapControllers();
+
+
+// 🔹 [NEW] После UseCors, до MapControllers
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        // 🔹 Логируем ошибку
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception in request");
+
+        // 🔹 Возвращаем 500 с корректными заголовками
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"error\":\"Internal server error\"}");
+    }
+});
 
 app.Run();

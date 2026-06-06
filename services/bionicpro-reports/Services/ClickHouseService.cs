@@ -1,9 +1,5 @@
 ﻿using ClickHouse.Client.ADO;
 using ClickHouse.Client.ADO.Parameters;
-
-//using ClickHouse.Client.Exceptions;  // 🔹 Исправлено: правильное пространство имен
-// ИЛИ, если выше не работает:
-// using ClickHouse.Client;  // ← альтернатива: исключение в корневом namespace
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,12 +12,15 @@ public class ClickHouseService
 {
     private readonly string _connStr;
     private readonly ILogger<ClickHouseService> _logger;
+    private readonly bool _useCdcVitrina; // 🔹 [CDC] Флаг переключения на новую витрину
 
     public ClickHouseService(IConfiguration config, ILogger<ClickHouseService> logger)
     {
         _connStr = config.GetValue<string>("ClickHouse:ConnectionString")
             ?? throw new InvalidOperationException("ClickHouse connection string is not configured");
         _logger = logger;
+        // 🔹 [CDC] Читаем настройку из config (по умолчанию — новая витрина)
+        _useCdcVitrina = config.GetValue<bool>("ClickHouse:UseCdcVitrina", true);
     }
 
     public async Task<List<ReportRow>> GetReportAsync(string userId, DateTime? from = null, DateTime? to = null)
@@ -42,52 +41,79 @@ public class ClickHouseService
 
             using var cmd = connection.CreateCommand();
 
-            userId = "5d6fe252-40ba-465e-9a73-8fc63e407631";
+            // 🔹 [CDC] Хардкод для тестов — можно убрать в продакшене
+            // userId = "5d6fe252-40ba-465e-9a73-8fc63e407631";
 
-            // Вместо параметров — безопасная подстановка для UUID
-            var safeUserId = userId.Replace("'", "''"); // экранирование одиночных кавычек
+            var safeUserId = userId.Replace("'", "''");
 
-            var sql = $@"
-                SELECT user_id, report_date, telemetry_json, crm_data_json 
-                FROM reports_vitrina
-                WHERE user_id = '{safeUserId}'";
-
-            // Для дат:
-            if (from.HasValue)
-                sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
-            if (to.HasValue)
-                sql += $" AND report_date <= '{to.Value:yyyy-MM-dd}'";
-
-            sql += " ORDER BY report_date DESC";
-            cmd.CommandText = sql;
-
-            _logger.LogDebug("Executing query: {Query}", cmd.CommandText);
-
-            var result = new List<ReportRow>();
-            using var reader = await cmd.ExecuteReaderAsync();
-
-            var rowCount = 0;
-            while (await reader.ReadAsync())
+            // 🔹 [CDC] НОВАЯ ВИТРИНА: ReplacingMergeTree + FINAL + новые колонки
+            if (_useCdcVitrina)
             {
-                result.Add(new ReportRow
-                {
-                    UserId = reader.GetString(0),
-                    ReportDate = reader.GetDateTime(1),
-                    Telemetry = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    CrmData = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
-                });
-                rowCount++;
-            }
+                var sql = $@"
+                    SELECT client_id, report_date, client_name, total_steps, avg_battery 
+                    FROM reports_db.reports_vitrina_cdc FINAL
+                    WHERE client_id = '{safeUserId}'";
 
-            _logger.LogDebug("Query returned {RowCount} rows for user {UserId}", rowCount, userId);
-            return result;
+                if (from.HasValue)
+                    sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
+                if (to.HasValue)
+                    sql += $" AND report_date <= '{to.Value:yyyy-MM-dd}'";
+
+                sql += " ORDER BY report_date DESC";
+                cmd.CommandText = sql;
+
+                _logger.LogDebug("Executing CDC query: {Query}", cmd.CommandText);
+
+                var result = new List<ReportRow>();
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result.Add(new ReportRow
+                    {
+                        UserId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),      // client_id
+                        ReportDate = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1), // report_date
+                        ClientName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),  // client_name (NEW)
+                        TotalSteps = reader.IsDBNull(3) ? 0 : Convert.ToUInt64(reader.GetValue(3)), // total_steps (NEW)
+                        AvgBattery = reader.IsDBNull(4) ? 0 : Convert.ToDouble(reader.GetValue(4))  // avg_battery (NEW)
+                    });
+                }
+                return result;
+            }
+            // 🔹 [CDC] СТАРАЯ ВИТРИНА: оставлена для отката/сравнения
+            else
+            {
+                var sql = $@"
+                    SELECT user_id, report_date, telemetry_json, crm_data_json 
+                    FROM reports_vitrina
+                    WHERE user_id = '{safeUserId}'";
+
+                if (from.HasValue)
+                    sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
+                if (to.HasValue)
+                    sql += $" AND report_date <= '{to.Value:yyyy-MM-dd}'";
+
+                sql += " ORDER BY report_date DESC";
+                cmd.CommandText = sql;
+
+                _logger.LogDebug("Executing LEGACY query: {Query}", cmd.CommandText);
+
+                var result = new List<ReportRow>();
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    result.Add(new ReportRow
+                    {
+                        UserId = reader.GetString(0),
+                        ReportDate = reader.GetDateTime(1),
+                        Telemetry = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                        CrmData = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
+                    });
+                }
+                return result;
+            }
         }
-        // 🔹 Исправлено: используем правильное имя исключения
-        //catch (ClickHouseException ex)  // ← без .Client.Exceptions
-        //{
-        //    _logger.LogError(ex, "ClickHouse error while fetching report for user {UserId}", userId);
-        //    throw new ServiceException($"Failed to fetch report from ClickHouse: {ex.Message}", ex);
-        //}
         catch (Exception ex) when (
             ex is not ArgumentException &&
             (ex.GetType().Namespace?.StartsWith("ClickHouse") == true || ex.Message.Contains("ClickHouse"))
@@ -112,12 +138,11 @@ public class ClickHouseService
 
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"
-            SELECT max(last_processed_date) 
-            FROM system.tables 
-            WHERE database = 'reports_db' AND name = 'etl_audit'
-        ";
+                SELECT max(last_processed_date) 
+                FROM system.tables 
+                WHERE database = 'reports_db' AND name = 'etl_audit'
+            ";
 
-            // Сначала проверим, существует ли таблица
             var tableExists = await cmd.ExecuteScalarAsync();
             if (tableExists == null || tableExists is DBNull)
             {
@@ -125,7 +150,6 @@ public class ClickHouseService
                 return null;
             }
 
-            // Если таблица есть — запрашиваем дату
             cmd.CommandText = "SELECT max(last_processed_date) FROM reports_db.etl_audit WHERE dag_id = 'reports_etl_dag'";
             var result = await cmd.ExecuteScalarAsync();
 
@@ -135,7 +159,7 @@ public class ClickHouseService
                 return null;
             }
 
-            return DateTime.Now;//Convert.ToDateTime(result);
+            return DateTime.Now;
         }
         catch (Exception ex) when (
             ex is not ArgumentException &&
@@ -143,7 +167,7 @@ public class ClickHouseService
         )
         {
             _logger.LogWarning("ClickHouse database/tables not initialized yet. ETL may not have run.");
-            return null;  // Возвращаем null, а не выбрасываем исключение
+            return null;
         }
         catch (Exception ex)
         {
@@ -163,6 +187,13 @@ public class ReportRow
 {
     public string UserId { get; set; } = string.Empty;
     public DateTime ReportDate { get; set; }
-    public string Telemetry { get; set; } = string.Empty;
-    public string CrmData { get; set; } = string.Empty;
+
+    // 🔹 [CDC] Поля для новой витрины
+    public string ClientName { get; set; } = string.Empty;        // NEW: из CRM CDC
+    public ulong TotalSteps { get; set; } = 0;                    // NEW: агрегированные шаги
+    public double AvgBattery { get; set; } = 0;                   // NEW: средний заряд
+
+    // 🔹 [CDC] Поля старой витрины (оставлены для обратной совместимости)
+    public string Telemetry { get; set; } = string.Empty;         // LEGACY
+    public string CrmData { get; set; } = string.Empty;           // LEGACY
 }
