@@ -38,22 +38,19 @@
               }
             },
             {
-              "id": "group-role-mapper",
-              "name": "ldap-group-to-realm-role",
-              "providerId": "group-ldap-mapper",
+              "name": "ldap-role-mapper",
+              "providerId": "role-ldap-mapper",
               "config": {
-                "mode": ["READ_ONLY"],
-                "user.roles.retrieve.strategy": ["LOAD_GROUPS_BY_MEMBER_ATTRIBUTE"],
-                "groups.dn": ["ou=Groups,dc=example,dc=com"],
-                "group.name.ldap.attribute": ["cn"],
-                "group.object.classes": ["groupOfNames"],
-                "preserve.group.inheritance": ["false"],
-                "ignore.missing.groups": ["false"],
-                "membership.attribute.type": ["DN"],
-                "membership.user.ldap.attribute": ["dn"],
+                "roles.dn": ["ou=Groups,dc=example,dc=com"],
+                "role.name.ldap.attribute": ["cn"],
+                "role.object.classes": ["groupOfNames"],
                 "membership.ldap.attribute": ["member"],
-                "mapped.group.attributes": ["cn"],
-                "memberof.ldap.attribute": ["memberOf"]
+                "membership.attribute.type": ["DN"],
+                "membership.user.ldap.attribute": ["uid"],
+                "mode": ["READ_ONLY"],
+                "user.roles.retrieve.strategy": ["LOAD_ROLES_BY_MEMBER_ATTRIBUTE"],
+                "use.realm.roles.mapping": ["true"],
+                "client.id": [""]
               }
             }
           ]
@@ -65,6 +62,7 @@
           "bindDn": ["cn=admin,dc=example,dc=com"],
           "bindCredential": ["adminpassword"],
           "baseDn": ["dc=example,dc=com"],
+          "usersDn": ["ou=People,dc=example,dc=com"], 
           "userObjectClasses": ["inetOrgPerson"],
           "usernameLDAPAttribute": ["uid"],
           "rdnLDAPAttribute": ["uid"],
