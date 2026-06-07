@@ -174,9 +174,24 @@
       "topLevel": true,
       "builtIn": false,
       "authenticationExecutions": [
-        { "id": "exec-cookie-01", "authenticator": "auth-cookie", "requirement": "ALTERNATIVE", "priority": 10 },
-        { "id": "exec-spnego-01", "authenticator": "auth-spnego", "requirement": "DISABLED", "priority": 20 },
-        { "id": "exec-forms-01", "flowAlias": "browser-with-otp forms", "requirement": "ALTERNATIVE", "priority": 30 }
+        {
+          "authenticator": "auth-cookie",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "authenticatorFlow": false
+        },
+        {
+          "authenticator": "auth-spnego",
+          "requirement": "DISABLED",
+          "priority": 20,
+          "authenticatorFlow": false
+        },
+        {
+          "flowAlias": "browser-with-otp forms",
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "authenticatorFlow": true
+        }
       ]
     },
     {
@@ -186,8 +201,18 @@
       "topLevel": false,
       "builtIn": false,
       "authenticationExecutions": [
-        { "id": "exec-user-pass-01", "authenticator": "auth-username-password-form", "requirement": "REQUIRED", "priority": 10 },
-        { "id": "exec-otp-01", "authenticator": "auth-otp-form", "requirement": "REQUIRED", "priority": 20 }
+        {
+          "authenticator": "auth-username-password-form",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false
+        },
+        {
+          "authenticator": "auth-otp-form",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false
+        }
       ]
     }
   ],
