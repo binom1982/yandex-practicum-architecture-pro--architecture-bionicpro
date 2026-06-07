@@ -235,9 +235,9 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s  # ← Ключевое: игнорируем сбои первые 30 сек
+      timeout: 10s          # ← увеличить с 5s
+      retries: 10           # ← увеличить с 5
+      start_period: 60s     # ← дать больше времени на initdb
 
   airflow-init:
     <<: *airflow-common

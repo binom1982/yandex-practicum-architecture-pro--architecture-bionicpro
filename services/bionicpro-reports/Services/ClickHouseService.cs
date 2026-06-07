@@ -51,8 +51,8 @@ public class ClickHouseService
             {
                 var sql = $@"
                     SELECT client_id, report_date, client_name, total_steps, avg_battery 
-                    FROM reports_db.reports_vitrina_cdc FINAL
-                    WHERE client_id = '{safeUserId}'";
+                    FROM reports_db.reports_vitrina_cdc FINAL";
+                    //WHERE client_id = '{safeUserId}'";
 
                 if (from.HasValue)
                     sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
@@ -85,8 +85,8 @@ public class ClickHouseService
             {
                 var sql = $@"
                     SELECT user_id, report_date, telemetry_json, crm_data_json 
-                    FROM reports_vitrina
-                    WHERE user_id = '{safeUserId}'";
+                    FROM reports_vitrina";
+                    //WHERE user_id = '{safeUserId}'";
 
                 if (from.HasValue)
                     sql += $" AND report_date >= '{from.Value:yyyy-MM-dd}'";
