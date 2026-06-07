@@ -216,5 +216,59 @@
       ]
     }
   ],
-  "browserFlow": "browser-with-otp"
+  "browserFlow": "browser-with-otp",
+  "identityProviders": [
+    {
+      "alias": "yandex",
+      "displayName": "Yandex ID",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": false,
+      "storeToken": true,
+      "addReadTokenRoleOnCreate": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "YANDEX_CLIENT_ID_PLACEHOLDER",
+        "clientSecret": "YANDEX_CLIENT_SECRET_PLACEHOLDER",
+        "authorizationUrl": "https://oauth.yandex.ru/authorize",
+        "tokenUrl": "https://oauth.yandex.ru/token",
+        "userInfoUrl": "https://login.yandex.ru/info",
+        "defaultScope": "login:info login:email",
+        "syncMode": "IMPORT",
+        "prompt": "consent"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "yandex-email-mapper",
+      "identityProviderAlias": "yandex",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "default_email",
+        "user.attribute": "email",
+        "syncMode": "INHERIT"
+      }
+    },
+    {
+      "name": "yandex-firstname-mapper",
+      "identityProviderAlias": "yandex",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "first_name",
+        "user.attribute": "firstName",
+        "syncMode": "INHERIT"
+      }
+    },
+    {
+      "name": "yandex-lastname-mapper",
+      "identityProviderAlias": "yandex",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "last_name",
+        "user.attribute": "lastName",
+        "syncMode": "INHERIT"
+      }
+    }
+  ]
 }
