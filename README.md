@@ -12,10 +12,10 @@ docker-compose up -d
 Аутентификация
 
 ```
-Открываем в баузере frontnd 
+Открываем в браузере frontend 
 http://localhost:3000
 
-Фронтенд обращается API Gateway (bionicpro-auth) по адресу http://localhost:8000, а он уже в свою очередедь к keycloak
+Фронтенд обращается API Gateway (bionicpro-auth) по адресу http://localhost:8000, а он уже в свою очередь к keycloak
 
 ```
 
@@ -26,7 +26,35 @@ http://localhost:3000
 
 ### Задание 2
 
-Инструкция
+У меня не получилось добиться создания таблиц в clickhouse при запуске  контейнера.
+
+Пути в докере прописаны, докер с дисками удалял, но скрипты не подхватывает, поэтому их необходимо выполнить после запуска контейнера и наполнить тестовыми данными
+
+```
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+```
+
+Запустить скрипты
+
+```
+clickhouse\init\01_create_vitrina.sql
+clickhouse\init\02_cdc_pipeline.sql
+```
+
+![image](screenshots\task_2_clickhouse_create_tables.png)
+
+```
+Открываем в браузере airflow (Он не открывался, тк ему нужно, время, после того как запустится keycloak, airflow должен открыться)
+http://localhost:8081/
+
+
+```
+![image](screenshots\task_2_airflow.png)
+
+### Задание 3
+
 
 Запустите
 
@@ -170,3 +198,7 @@ docker-compose up -d --build --force-recreate frontend
 | **Business DB (PostgreSQL)**       | **localhost:5434**                             | **bionic / bionic**                      | **Источник данных: CRM, заказы, пользователи, телеметрия**                         |
 | **Kafka Connect (Debezium)**       | **localhost:8083**                             | **-**                                    | **Коннектор CDC для репликации изменений из PostgreSQL в Kafka**                           |
 | **Kafka Broker**                   | **localhost:9092**                             | **-**                                    | **Топики для CDC-событий и ETL-пайплайнов**                                                       |
+
+открываем airflow (возможно ему нужно тоже время, чтобы поднялась зщs)
+
+http://localhost:8081/
