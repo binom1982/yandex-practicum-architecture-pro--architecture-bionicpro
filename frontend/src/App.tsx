@@ -1,23 +1,56 @@
-import React from 'react';
-import { ReactKeycloakProvider } from '@react-keycloak/web';
-import Keycloak, { KeycloakConfig } from 'keycloak-js';
+import React, { useEffect, useState } from 'react';
+import { initiateLogin, checkSession, getUserInfo, logout, UserInfo } from './services/auth';
 import ReportPage from './components/ReportPage';
 
-const keycloakConfig: KeycloakConfig = {
-  url: process.env.REACT_APP_KEYCLOAK_URL,
-  realm: process.env.REACT_APP_KEYCLOAK_REALM||"",
-  clientId: process.env.REACT_APP_KEYCLOAK_CLIENT_ID||""
-};
-
-const keycloak = new Keycloak(keycloakConfig);
-
 const App: React.FC = () => {
-  return (
-    <ReactKeycloakProvider authClient={keycloak}>
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const init = async () => {
+      const auth = await checkSession();
+      if (auth) {
+        const info = await getUserInfo();
+        if (info) {
+          setUserInfo(info);
+          setIsAuthenticated(true);
+        }
+      }
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  if (loading) return <div className="App">Загрузка...</div>;
+
+  if (!isAuthenticated) {
+    return (
       <div className="App">
-        <ReportPage />
+        <h1>BionicPRO</h1>
+        <button onClick={initiateLogin}>
+          Войти через bionicpro-auth
+        </button>
       </div>
-    </ReactKeycloakProvider>
+    );
+  }
+
+  const hasProtheticRole = userInfo?.roles?.includes('prothetic_user') ?? false;
+
+  return (
+    <div className="App">
+      <header>
+        <h1>Привет, {userInfo?.email}</h1>
+        <button onClick={async () => {
+          await logout();
+          setIsAuthenticated(false);
+          setUserInfo(null);
+        }}>
+          Выйти
+        </button>
+      </header>
+      {hasProtheticRole && userInfo?.email && <ReportPage userId={userInfo.sub} />}
+    </div>
   );
 };
 

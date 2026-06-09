@@ -1,73 +1,87 @@
 import React, { useState } from 'react';
-import { useKeycloak } from '@react-keycloak/web';
 
-const ReportPage: React.FC = () => {
-  const { keycloak, initialized } = useKeycloak();
-  const [loading, setLoading] = useState(false);
+interface Props {
+  userId: string;
+}
+
+const ReportPage: React.FC<Props> = ({ userId }) => {
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const downloadReport = async () => {
-    if (!keycloak?.token) {
-      setError('Not authenticated');
-      return;
-    }
-
+  const handleGenerate = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/reports`, {
-        headers: {
-          'Authorization': `Bearer ${keycloak.token}`
-        }
-      });
+      // 1. Запрашиваем ссылку на отчёт у API (с передачей сессионной cookie)
+      const response = await fetch(
+        `${process.env.REACT_APP_REPORTS_URL}/reports?user_id=${userId}`,
+        { credentials: 'include' }
+      );
 
+      if (!response.ok) {
+        // 🔹 Читаем сообщение об ошибке из ответа сервера
+        let serverMessage = 'Failed to generate report';
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) {
+            serverMessage = errorData.error;
+          }
+          if (errorData?.retryAfter) {
+            serverMessage += ` (повторите после ${errorData.retryAfter})`;
+          }
+        } catch {
+          // Если ответ не JSON — оставляем дефолтное сообщение
+        }
+        throw new Error(serverMessage);
+      }
+
+      // 🔹 ИЗМЕНЕНО: Получаем JSON с URL на CDN вместо сырых данных
+      const data = await response.json();
+      const cdnUrl = data.url;
+
+      if (!cdnUrl) {
+        throw new Error('API не вернул ссылку на отчёт');
+      }
+
+      // 🔹 ИЗМЕНЕНО: Скачиваем файл напрямую из CDN
+      // Используем fetch для получения Blob, чтобы браузер гарантированно скачал файл,
+      // а не просто отобразил JSON текст в новой вкладке.
+      // Запрос к CDN идет без credentials, так как Nginx отдает файлы анонимно.
+      const fileResponse = await fetch(cdnUrl);
+      if (!fileResponse.ok) {
+        throw new Error(`Ошибка скачивания из CDN: ${fileResponse.status}`);
+      }
+
+      const blob = await fileResponse.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
       
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Берём имя файла из URL CDN (обрезаем query-параметры типа ?v=123) или генерируем дефолтное
+      const urlFileName = cdnUrl.split('/').pop()?.split('?')[0];
+      a.download = urlFileName || `report-${userId}.json`;
+      
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Ошибка генерации';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!initialized) {
-    return <div>Loading...</div>;
-  }
-
-  if (!keycloak.authenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <button
-          onClick={() => keycloak.login()}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Login
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6">Usage Reports</h1>
-        
-        <button
-          onClick={downloadReport}
-          disabled={loading}
-          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
-            loading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {loading ? 'Generating Report...' : 'Download Report'}
-        </button>
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-      </div>
+    <div className="report-page">
+      <h2>Отчёт по протезу</h2>
+      <button onClick={handleGenerate} disabled={loading}>
+        {loading ? 'Формирование...' : 'Сформировать отчёт'}
+      </button>
+      {error && <p className="error">{error}</p>}
     </div>
   );
 };

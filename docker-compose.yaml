@@ -1,25 +1,78 @@
-version: '3.8'
+name: bionicpro
 
+# ─────────────────────────────────────────────────────
+# YAML-якорь для переиспользования (на корневом уровне)
+# ─────────────────────────────────────────────────────
+x-airflow-common: &airflow-common
+  # image: apache/airflow:2.8.1
+  build:
+    context: ./airflow
+    dockerfile: Dockerfile
+  environment:
+    # 🔹 Обязательно: подключение к PostgreSQL (одинаково для всех сервисов)
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    
+    # Fernet key для шифрования (должен быть одинаковым)
+    AIRFLOW__CORE__FERNET_KEY: 'ZmDqFC3hYp4K7s2V9x1W8e6RtYuI0oP-aBcDeFgHiJk='
+    
+    # Остальные настройки
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    
+    # Подключения к внешним БД
+    AIRFLOW_CONN_CRM_DB: 'postgresql://crm_user:crm_pass@crmpostgres:5432/crm_db'
+    AIRFLOW_CONN_TELEMETRY_DB: 'postgresql://tel_user:tel_pass@telemetrypostgres:5432/telemetry_db'
+    AIRFLOW_CONN_CLICKHOUSE_OLAP: 'clickhouse+native://default:@clickhouse:9000/reports_db'
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    # - ./airflow/requirements.txt:/requirements.txt  # ← добавить
+  depends_on:
+    airflow-postgres:
+      condition: service_healthy
+  restart: on-failure
+
+# ─────────────────────────────────────────────────────
+# Сервисы
+# ─────────────────────────────────────────────────────
 services:
-  keycloak_db:
+  # ─────────────────────────────────────────────────────
+  # Keycloak + PostgreSQL
+  # ─────────────────────────────────────────────────────
+  keycloak-db:  # ← тире вместо подчёркивания
     image: postgres:14
+    # container_name удалён — имя будет bionicpro-keycloak-db-1
     environment:
-      POSTGRES_DB: keycloak_db
+      POSTGRES_DB: keycloak_db  # ← имя БД внутри PostgreSQL (оставляем подчёркивание)
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: keycloak_password
     volumes:
-      - ./postgres-keycloak-data:/var/lib/postgresql/data
+      - keycloak-pg-data:/var/lib/postgresql/data  # ← тире в имени volume
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak_user -d keycloak_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 300s
+
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db  # ← ссылается на сервис keycloak-db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
+      KC_HEALTH_ENABLED: "true"
+      KC_DB_POOL_INITIAL_SIZE: "2"
+      KC_DB_POOL_MIN_SIZE: "2"
+      KC_DB_POOL_MAX_SIZE: "10"
+      KC_DB_SCHEMA: public
+      KC_IMPORT_STRATEGY: OVERWRITE_EXISTING
     command: 
       - start-dev
       - --import-realm
@@ -28,7 +81,77 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - keycloak_db
+      keycloak-db:  # ← обновлена ссылка
+        condition: service_healthy
+    restart: on-failure
+    # healthcheck:
+    #   disable: true  # ← только для dev!
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/ || exit 1"]  # ← проще: проверяем корень
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 300s
+
+  # ─────────────────────────────────────────────────────
+  # Auth service
+  # ─────────────────────────────────────────────────────
+  bionicpro-auth:
+    build:
+      context: ./services/bionicpro-auth-service
+      dockerfile: Dockerfile
+    # user: "1000:1000"  # ← запускать процесс от UID:GID 1000
+    ports:
+      - "8000:8080"
+    # volumes:
+    # - auth-keys:/app/keys  # ← примонтировать volume
+    environment:
+      # 🔹 PublicUrl — для браузера (редиректы, redirect_uri)
+      Keycloak__PublicUrl: http://localhost:8080    
+      # 🔹 InternalUrl — для серверных вызовов к Keycloak
+      Keycloak__InternalUrl: http://keycloak:8080
+      #Keycloak__AuthServiceUrl: http://localhost:8000  # ← добавить
+
+      #Keycloak__CallbackUrl: http://localhost:3000  # Куда Keycloak редиректит после логина
+      Keycloak__Realm: reports-realm
+      Keycloak__ClientId: reports-api
+      Keycloak__ClientSecret: oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq
+      
+      # 🔹 AuthSession настройки (должны совпадать с GetSection("AuthSession"))
+      AuthSession__CookieName: bionicpro_session
+      AuthSession__SessionLifetimeMinutes: 60  # ← если хотите переопределить дефолт 1440
+      
+      # 🔹 SessionSecurity настройки (для шифрования)
+      SessionSecurity__EncryptionKey: "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6"  # ← обязательно 32 символа
+      SessionSecurity__EncryptionAlgorithm: AES
+      SessionSecurity__RequireSecureCookie: false
+
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+            # 🔹 ДОБАВИТЬ: Настройки для S3 (MinIO)
+      S3__Endpoint: "http://minio:9000"
+      S3__AccessKey: "minioadmin"
+      S3__SecretKey: "minioadmin"
+      S3__BucketName: "reports"
+      S3__ForcePathStyle: "true" # Важно для MinIO
+      
+      # 🔹 ДОБАВИТЬ: Публичный URL CDN для отдачи на фронтенд
+      CDN__BaseUrl: "http://localhost:8888"
+
+    depends_on:
+      keycloak:
+        condition: service_started # service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080'"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────
+  # Frontend
+  # ─────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -37,6 +160,241 @@ services:
       - "3000:3000"
     environment:
       REACT_APP_API_URL: http://localhost:8000
-      REACT_APP_KEYCLOAK_URL: http://localhost:8080
-      REACT_APP_KEYCLOAK_REALM: reports-realm
-      REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+      REACT_APP_AUTH_URL: http://localhost:8000
+      REACT_APP_REPORTS_URL: http://localhost:5001
+    depends_on:
+      bionicpro-auth:
+        condition: service_healthy
+
+  # ─────────────────────────────────────────────────────
+  # LDAP
+  # ─────────────────────────────────────────────────────
+  openldap:
+    image: osixia/openldap:1.5.0
+    ports:
+      - "1389:389"
+      - "1636:636"
+    environment:
+      - LDAP_ORGANISATION=BionicPRO
+      - LDAP_DOMAIN=example.com
+      - LDAP_ADMIN_PASSWORD=adminpassword
+      - LDAP_CONFIG_PASSWORD=configpassword
+      - LDAP_TLS=false
+    volumes:
+      - ./ldap/config.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config.ldif:ro
+      - ldap-data:/var/lib/ldap  # ← тире
+      - ldap-config:/etc/ldap/slapd.d  # ← тире
+    command: ["--copy-service"]
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-b", "dc=example,dc=com", "-D", "cn=admin,dc=example,dc=com", "-w", "adminpassword", "objectClass=*"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    ports:
+      - "6443:80"
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+      - PHPLDAPADMIN_HTTPS=false
+    depends_on:
+      openldap:
+        condition: service_healthy
+
+  # ─────────────────────────────────────────────────────
+  # OLAP
+  # ─────────────────────────────────────────────────────
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.12
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: reports_db  # ← имя БД внутри ClickHouse (подчёркивание)
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-postgres:  # ← уже с тире, оставляем
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 10s          # ← увеличить с 5s
+      retries: 10           # ← увеличить с 5
+      start_period: 60s     # ← дать больше времени на initdb
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    restart: "no"  # ← контейнер должен выполниться один раз и завершиться
+    command:
+      - -c
+      - |
+        set -e
+        echo "🔄 Initializing Airflow DB..."
+        airflow db init
+        
+        echo "🔗 Adding connections (ignoring if hosts missing)..."
+        airflow connections add 'crm_db' \
+          --conn-type 'postgres' \
+          --conn-host 'crmpostgres' \
+          --conn-port '5432' \
+          --conn-login 'crm_user' \
+          --conn-password 'crm_pass' \
+          --conn-schema 'crm_db' || echo "⚠️ CRM host not available yet"
+          
+        airflow connections add 'telemetry_db' \
+          --conn-type 'postgres' \
+          --conn-host 'telemetrypostgres' \
+          --conn-port '5432' \
+          --conn-login 'tel_user' \
+          --conn-password 'tel_pass' \
+          --conn-schema 'telemetry_db' || echo "⚠️ Telemetry host not available yet"
+          
+        echo "👤 Creating admin user..."
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@bionicpro.local || echo "⚠️ Admin already exists"
+          
+        echo "✅ Airflow init finished"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+
+  # ─────────────────────────────────────────────────────
+  # Reports API
+  # ─────────────────────────────────────────────────────
+  bionicpro-reports:
+    build: ./services/bionicpro-reports
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"  # ← важно для Docker
+      ClickHouse__ConnectionString: "Host=clickhouse;Port=8123;Database=reports_db;Username=default;Password="
+      AUTH_SERVICE_URL: "http://bionicpro-auth:8080"  # 🔹 Должно быть внутреннее имя сервиса
+      SESSION_COOKIE_NAME: "bionicpro_session"  # 🔹 Должно совпадать с auth-сервисом
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      bionicpro-auth:  # 🔹 Зависимость от auth-сервиса
+        condition: service_healthy
+
+  # ---------------------------------------------------------------
+  # MinIO — S3-совместимое объектное хранилище (Задание 3)
+  # -------------------------------------------------------------
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  minio-init:
+    image: minio/mc
+    depends_on: [minio]
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb --ignore-existing local/reports;
+      mc anonymous set download local/reports;
+      exit 0;"
+
+  # ---------------------------------------------------------------
+  # Nginx CDN — reverse proxy с кешированием (Задание 3)
+  # ---------------------------------------------------------------
+  nginx-cdn:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/nginx-cdn.conf:/etc/nginx/conf.d/default.conf
+      - nginx-cache:/var/cache/nginx
+    ports:
+      - "8888:80"
+    depends_on: [minio]
+
+
+# ---------------------------------------------------------------
+# Kafka Connect + Debezium (Задание 4)
+# ---------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    ports: ["9092:9092"]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports: ["8085:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on: [kafka]
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.5.0
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_PLUGIN_PATH: /usr/share/java,/connectors
+    volumes:
+      - ./debezium:/connectors/debezium-connector-postgres
+    ports: ["8083:8083"]
+    depends_on: [kafka]
+
+# ─────────────────────────────────────────────────────
+# Volumes
+# ─────────────────────────────────────────────────────
+volumes:
+  keycloak-pg-data:
+  ldap-data:
+  ldap-config:
+  clickhouse-data:
+  airflow-pg-data:
+  #auth-keys: 
+  minio-data:
+  nginx-cache:
