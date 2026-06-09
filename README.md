@@ -1,4 +1,32 @@
-# Инструкция
+## Обновленная инструкция
+
+### Задание 1
+
+```
+docker-compose down -v
+docker-compose up -d
+
+# Ждем 2 минуты пока запуститься keycloak (через health настроить, корректно не получитлось, поэтому ждем)
+```
+
+Аутентификация
+
+```
+Открываем в баузере frontnd 
+http://localhost:3000
+
+Фронтенд обращается API Gateway (bionicpro-auth) по адресу http://localhost:8000, а он уже в свою очередедь к keycloak
+
+```
+
+![image](screenshots\task1_01_frontend.png)
+![image](screenshots\task1_02_keycloak_login.png)
+![image](screenshots\task1_03_keycloak_mobile_auth.png)
+![image](screenshots\task1_04_frontend_logined.png)
+
+### Задание 2
+
+Инструкция
 
 Запустите
 

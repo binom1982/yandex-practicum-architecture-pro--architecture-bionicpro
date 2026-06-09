@@ -1640,3 +1640,45 @@
 [2026-06-07T15:29:07.606+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:29:07.605+0000] {dag.py:3036} INFO - Sync 1 DAGs
 [2026-06-07T15:29:07.631+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:29:07.631+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
 [2026-06-07T15:29:07.660+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.369 seconds
+[2026-06-07T15:29:37.902+0000] {processor.py:161} INFO - Started process (PID=347) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:29:37.904+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:29:37.905+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:29:37.905+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:29:38.294+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:29:38.340+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:29:38.340+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:29:38.370+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:29:38.370+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:29:38.409+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.516 seconds
+[2026-06-07T15:30:09.234+0000] {processor.py:161} INFO - Started process (PID=352) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:09.236+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:30:09.237+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:09.237+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:09.500+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:09.534+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:09.533+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:30:09.560+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:09.560+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:30:09.592+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.364 seconds
+[2026-06-07T15:30:39.901+0000] {processor.py:161} INFO - Started process (PID=357) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:39.903+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:30:39.904+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:39.904+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:40.283+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:30:40.367+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:40.366+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:30:40.559+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:30:40.559+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:30:40.726+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.831 seconds
+[2026-06-07T15:31:11.067+0000] {processor.py:161} INFO - Started process (PID=362) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:11.070+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:31:11.072+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:11.071+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:11.386+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:11.440+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:11.440+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:31:11.513+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:11.513+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:31:11.614+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 0.552 seconds
+[2026-06-07T15:31:43.020+0000] {processor.py:161} INFO - Started process (PID=367) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:43.056+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:31:43.086+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:43.085+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:44.789+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:31:44.926+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:44.925+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:31:45.070+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:31:45.070+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:31:45.219+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 2.286 seconds
+[2026-06-07T15:32:15.921+0000] {processor.py:161} INFO - Started process (PID=372) to work on /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:32:15.924+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/reports_etl_dag.py for tasks to queue
+[2026-06-07T15:32:15.928+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:32:15.928+0000] {dagbag.py:538} INFO - Filling up the DagBag from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:32:16.750+0000] {processor.py:840} INFO - DAG(s) 'reports_etl_dag' retrieved from /opt/airflow/dags/reports_etl_dag.py
+[2026-06-07T15:32:16.862+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:32:16.862+0000] {dag.py:3036} INFO - Sync 1 DAGs
+[2026-06-07T15:32:16.944+0000] {logging_mixin.py:188} INFO - [2026-06-07T15:32:16.943+0000] {dag.py:3823} INFO - Setting next_dagrun for reports_etl_dag to 2026-06-06 02:00:00+00:00, run_after=2026-06-07 02:00:00+00:00
+[2026-06-07T15:32:17.083+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/reports_etl_dag.py took 1.167 seconds
